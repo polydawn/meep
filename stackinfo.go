@@ -13,7 +13,7 @@ type Stack struct {
 type Frame uintptr
 
 func CaptureStack() *Stack {
-	// This looks convoluted (and it is), but there's a reason:
+	// This looks convoluted (and it is).  There's a reason:
 	//  `runtime.Callers` badly wants a uintptr slice, but we want another
 	//  type so we can hang e.g. a reasonable stringer method on it.
 	// You can't cast alias'd types into each other's slices, so...
