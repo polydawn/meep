@@ -58,19 +58,26 @@ func (m *AutodescribingError) ErrorMessage() string {
 	// Annouce the type info.
 	buf.WriteString("Error[")
 	buf.WriteString(rv_self.Type().String())
-	buf.WriteString("]: ") // FIXME only if fields
+	buf.WriteString("]:")
 	// Iterate over fields.
 	// If we hit any customs, save em; they serialize after other fields.
 	nField := rv_self.NumField()
+	havePrintedFields := false
 	var custom []func()
 	for i := 0; i < nField; i++ {
 		f := rv_self.Field(i)
+		// if it's one of the special/multiliners, stack it up for later
 		if fn, ok := customDescribe[f.Type()]; ok {
 			if fn != nil {
 				custom = append(custom, func() { fn(f, buf) })
 			}
 			continue
 		}
+		// if it's a regular field, print the field=value pair
+		if havePrintedFields == false {
+			buf.WriteByte(' ')
+		}
+		havePrintedFields = true
 		buf.WriteString(rv_self.Type().Field(i).Name)
 		buf.WriteByte('=')
 		buf.WriteString(fmt.Sprintf("%#v", f.Interface()))

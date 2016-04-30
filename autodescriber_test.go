@@ -75,7 +75,7 @@ func TestAutodescribePlusTraceableCause(t *testing.T) {
 		},
 	})
 	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
-	expect += "\t" + `Caused by: Error[meep.Boop]: ` + "\n" // trailing space questionable
+	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
 	expect += "\t\t" + `Stack trace:` + "\n"
 	expect += "\t\t\t" + `·> /autodescriber_test.go:74: meep.TestAutodescribePlusTraceableCause` + "\n"
 	expect += "\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
@@ -111,8 +111,8 @@ func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
 		},
 	})
 	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
-	expect += "\t" + `Caused by: Error[meep.Boop]: ` + "\n"   // trailing space questionable
-	expect += "\t\t" + `Caused by: Error[meep.Boop]: ` + "\n" // trailing space questionable
+	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
+	expect += "\t\t" + `Caused by: Error[meep.Boop]:` + "\n"
 	expect += "\t\t\t" + `Stack trace:` + "\n"
 	expect += "\t\t\t\t" + `·> /autodescriber_test.go:108: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
 	expect += "\t\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
