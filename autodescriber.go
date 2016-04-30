@@ -77,9 +77,11 @@ func (m *AutodescribingError) ErrorMessage() string {
 		buf.WriteByte(';')
 	}
 	// Now go back and let the customs have their say.
-	for _, fn := range custom {
-		// Give each a clean line; we're now an ML result.
+	// (If there are any: Start with a clean line; we're now an ML result.)
+	if len(custom) > 0 {
 		buf.WriteByte('\n')
+	}
+	for _, fn := range custom {
 		fn()
 		// customs are expected to finish with one trailing \n apiece
 	}
