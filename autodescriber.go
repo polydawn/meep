@@ -15,14 +15,32 @@ type meepAutodescriber interface {
 func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { return m }
 
 var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect.Type]func(reflect.Value, io.Writer){
-	reflect.TypeOf(Meep{}):           func(reflect.Value, io.Writer) {},
-	reflect.TypeOf(TraceableError{}): func(reflect.Value, io.Writer) {},
-	reflect.TypeOf(CauseableError{}): func(f reflect.Value, buf io.Writer) {
-		buf.Write([]byte("\n\tCaused by: "))
-		buf.Write([]byte(f.FieldByName("Cause").Interface().(error).Error()))
+	reflect.TypeOf(Meep{}): nil,
+	reflect.TypeOf(TraceableError{}): func(f reflect.Value, buf io.Writer) {
+		buf = indenter(buf)
+		buf.Write([]byte("Stack trace:\n"))
+		buf = indenter(buf)
+		//buf.(*rediscipliner).prefix = []byte{} // stacks already tab themselves in once
+		m := reflect.Indirect(f).Interface().(TraceableError)
+		m.WriteStack(buf)
 	},
-	reflect.TypeOf(GroupingError{}):       func(reflect.Value, io.Writer) {},
-	reflect.TypeOf(AutodescribingError{}): func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(CauseableError{}): func(f reflect.Value, buf io.Writer) {
+		buf = indenter(buf)
+		buf.Write([]byte("Caused by: "))
+		cause := f.FieldByName("Cause").Interface().(error)
+		if cause == nil {
+			buf.Write([]byte("<nil>\n"))
+			return
+		}
+		// since we're now in multiline mode, we want to wrap up with a br.
+		msg := []byte(cause.Error())
+		buf.Write(msg)
+		if len(msg) == 0 || msg[len(msg)-1] != '\n' {
+			buf.Write(br)
+		}
+	},
+	reflect.TypeOf(GroupingError{}):       nil,
+	reflect.TypeOf(AutodescribingError{}): nil,
 }
 
 func (m *AutodescribingError) ErrorMessage() string {
@@ -41,7 +59,7 @@ func (m *AutodescribingError) ErrorMessage() string {
 	// Annouce the type info.
 	buf.WriteString("Error[")
 	buf.WriteString(rv_self.Type().String())
-	buf.WriteString("]: ")
+	buf.WriteString("]: ") // FIXME only if fields
 	// Iterate over fields.
 	// If we hit any customs, save em; they serialize after other fields.
 	nField := rv_self.NumField()
@@ -49,7 +67,9 @@ func (m *AutodescribingError) ErrorMessage() string {
 	for i := 0; i < nField; i++ {
 		f := rv_self.Field(i)
 		if fn, ok := customDescribe[f.Type()]; ok {
-			custom = append(custom, func() { fn(f, buf) })
+			if fn != nil {
+				custom = append(custom, func() { fn(f, buf) })
+			}
 			continue
 		}
 		buf.WriteString(rv_self.Type().Field(i).Name)
@@ -59,7 +79,10 @@ func (m *AutodescribingError) ErrorMessage() string {
 	}
 	// Now go back and let the customs have their say.
 	for _, fn := range custom {
+		// Give each a clean line; we're now an ML result.
+		buf.WriteByte('\n')
 		fn()
+		// customs are expected to finish with one trailing \n apiece
 	}
 	// That's it.  Return the buffer results.
 	return buf.String()
