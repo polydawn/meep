@@ -14,7 +14,7 @@ func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { retur
 
 var dontDescribe map[reflect.Type]struct{} = map[reflect.Type]struct{}{
 	reflect.TypeOf(Meep{}):                struct{}{},
-	reflect.TypeOf(StackableError{}):      struct{}{},
+	reflect.TypeOf(TraceableError{}):      struct{}{},
 	reflect.TypeOf(CauseableError{}):      struct{}{},
 	reflect.TypeOf(GroupingError{}):       struct{}{},
 	reflect.TypeOf(AutodescribingError{}): struct{}{},
