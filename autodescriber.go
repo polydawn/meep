@@ -1,7 +1,9 @@
 package meep
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"reflect"
 )
 
@@ -12,38 +14,46 @@ type meepAutodescriber interface {
 // note that this function applies if you have a type which embeds this one sans-*, but you have a ref to that type.
 func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { return m }
 
-var dontDescribe map[reflect.Type]struct{} = map[reflect.Type]struct{}{
-	reflect.TypeOf(Meep{}):                struct{}{},
-	reflect.TypeOf(TraceableError{}):      struct{}{},
-	reflect.TypeOf(CauseableError{}):      struct{}{},
-	reflect.TypeOf(GroupingError{}):       struct{}{},
-	reflect.TypeOf(AutodescribingError{}): struct{}{},
+var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect.Type]func(reflect.Value, io.Writer){
+	reflect.TypeOf(Meep{}):                func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(TraceableError{}):      func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(CauseableError{}):      func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(GroupingError{}):       func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(AutodescribingError{}): func(reflect.Value, io.Writer) {},
 }
 
 func (m *AutodescribingError) ErrorMessage() string {
+	// Check for initialization.
+	// Can't do much of use if we didn't get initialized with a selfie reference.
 	if m.self == nil {
-		// can't do much of use if we didn't get initialized with a selfie reference.
-		panic("uninitialized")
+		panic("meep:uninitialized")
 	}
+	// Unwind any pointer indirections.
 	rv_self := reflect.ValueOf(m.self)
 	for rv_self.Kind() == reflect.Ptr {
 		rv_self = rv_self.Elem()
 	}
-	rv_self.CanInterface()
+	// Start buffering.
+	buf := &bytes.Buffer{}
+	// Annouce the type info.
+	buf.WriteString("Error[")
+	buf.WriteString(rv_self.Type().String())
+	buf.WriteString("]: ")
+	// Iterate over fields.
 	nField := rv_self.NumField()
-	content := ""
 	for i := 0; i < nField; i++ {
 		f := rv_self.Field(i)
-		if _, ok := dontDescribe[f.Type()]; ok {
+		if custom, ok := customDescribe[f.Type()]; ok {
+			custom(f, buf)
 			continue
 		}
-		content += rv_self.Type().Field(i).Name + "=" + fmt.Sprintf("%#v", f.Interface()) + "; "
+		buf.WriteString(rv_self.Type().Field(i).Name)
+		buf.WriteByte('=')
+		buf.WriteString(fmt.Sprintf("%#v", f.Interface()))
+		buf.WriteByte(';')
 	}
-	return fmt.Sprintf(
-		"Error[%s]: %s",
-		rv_self.Type(),
-		content,
-	)
+	// That's it.  Return the buffer results.
+	return buf.String()
 }
 
 /*
