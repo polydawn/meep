@@ -132,3 +132,24 @@ func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
 	actual = strings.Replace(actual, "\n", "\\n\n", -1)
 	t.Logf("this is what errors with causes that have stacktraces look like :D\n>>>\n%s\n<<<\n", actual)
 }
+
+func TestAutodescribeManyFields(t *testing.T) {
+	type ErrBananaPancakes struct {
+		AutodescribingError
+		Alpha string
+		Beta  int
+		Gamma interface{}
+		Delta string
+	}
+	err := New(&ErrBananaPancakes{
+		Alpha: "unO",
+		Beta:  1,
+		Gamma: struct{}{},
+		Delta: "ca\ttorce",
+	})
+	expect := `Error[meep.ErrBananaPancakes]: Alpha="unO";Beta=1;Gamma=struct {}{};Delta="ca\ttorce";`
+	actual := err.Error()
+	if expect != actual {
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+	}
+}
