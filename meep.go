@@ -5,7 +5,7 @@ func New(err error) error {
 		m.isMeepAutodescriber().self = err
 	}
 	if m, ok := err.(meepTraceable); ok {
-		m.isMeepTraceable().Stack = *CaptureStack()
+		m.isMeepTraceable().Stack = *captureStack()
 	}
 	return err
 }

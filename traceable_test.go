@@ -16,7 +16,6 @@ func ExampleTraceableErr() {
 	str := err.(*Woop).StackString()
 
 	// The *entire* output probably looks something like this:
-	//		·> /your/build/path/meep/meep.go:8: meep.New
 	//		·> /your/build/path/meep/traceable_test.go:15: meep_test.ExampleTraceableErr
 	//		·> /usr/local/go/src/testing/example.go:98: testing.runExample
 	//		·> /usr/local/go/src/testing/example.go:36: testing.RunExamplesa
@@ -26,8 +25,10 @@ func ExampleTraceableErr() {
 	//		·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit
 	// We filter it down rather dramatically so as not to catch any line
 	//  numbers from the stdlib we built against, etc.
+	// The most salient point is that the first line should be pointing
+	//  right here, where we initialized the value.
 
-	str = strings.Split(str, "\n")[1]      // yank the one interesting line
+	str = strings.Split(str, "\n")[0]      // yank the one interesting line
 	str = strings.Replace(str, cwd, "", 1) // strip the local build path
 	fmt.Println(str)
 

@@ -28,6 +28,10 @@ type Frame uintptr
 	features in that (zerodep!) package.
 */
 func CaptureStack() *Stack {
+	return captureStack()
+}
+
+func captureStack() *Stack {
 	// This looks convoluted (and it is).  There's a reason:
 	//  `runtime.Callers` badly wants a uintptr slice, but we want another
 	//  type so we can hang e.g. a reasonable stringer method on it.
@@ -37,8 +41,9 @@ func CaptureStack() *Stack {
 	// We offset to skip:
 	//  0: runtime.Callers itself
 	//  1: this function
-	//  2: [start_here]
-	n := runtime.Callers(2, pcs[:])
+	//  2: {one of this pkg's public functions}
+	//  3: [start_here]
+	n := runtime.Callers(3, pcs[:])
 	frames := make([]Frame, n)
 	for i := 0; i < n; i++ {
 		frames[i] = Frame(pcs[i])
