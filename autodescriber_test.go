@@ -48,7 +48,7 @@ func TestAutodescribePlusCause(t *testing.T) {
 		CauseableError: CauseableError{fmt.Errorf("lecause")},
 	})
 	expect := `Error[meep.Woop]: Wonk="Bonk";`
-	// TODO : // expect += "\n\t" + `Caused by: lecause`
+	expect += "\n\t" + `Caused by: lecause`
 	if expect != err.Error() {
 		t.Errorf("expected %q, got %q", expect, err.Error())
 	}

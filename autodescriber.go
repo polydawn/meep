@@ -15,9 +15,12 @@ type meepAutodescriber interface {
 func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { return m }
 
 var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect.Type]func(reflect.Value, io.Writer){
-	reflect.TypeOf(Meep{}):                func(reflect.Value, io.Writer) {},
-	reflect.TypeOf(TraceableError{}):      func(reflect.Value, io.Writer) {},
-	reflect.TypeOf(CauseableError{}):      func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(Meep{}):           func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(TraceableError{}): func(reflect.Value, io.Writer) {},
+	reflect.TypeOf(CauseableError{}): func(f reflect.Value, buf io.Writer) {
+		buf.Write([]byte("\n\tCaused by: "))
+		buf.Write([]byte(f.FieldByName("Cause").Interface().(error).Error()))
+	},
 	reflect.TypeOf(GroupingError{}):       func(reflect.Value, io.Writer) {},
 	reflect.TypeOf(AutodescribingError{}): func(reflect.Value, io.Writer) {},
 }
@@ -40,17 +43,23 @@ func (m *AutodescribingError) ErrorMessage() string {
 	buf.WriteString(rv_self.Type().String())
 	buf.WriteString("]: ")
 	// Iterate over fields.
+	// If we hit any customs, save em; they serialize after other fields.
 	nField := rv_self.NumField()
+	var custom []func()
 	for i := 0; i < nField; i++ {
 		f := rv_self.Field(i)
-		if custom, ok := customDescribe[f.Type()]; ok {
-			custom(f, buf)
+		if fn, ok := customDescribe[f.Type()]; ok {
+			custom = append(custom, func() { fn(f, buf) })
 			continue
 		}
 		buf.WriteString(rv_self.Type().Field(i).Name)
 		buf.WriteByte('=')
 		buf.WriteString(fmt.Sprintf("%#v", f.Interface()))
 		buf.WriteByte(';')
+	}
+	// Now go back and let the customs have their say.
+	for _, fn := range custom {
+		fn()
 	}
 	// That's it.  Return the buffer results.
 	return buf.String()
