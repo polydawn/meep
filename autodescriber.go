@@ -25,13 +25,12 @@ var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect
 		m.WriteStack(buf)
 	},
 	reflect.TypeOf(CauseableError{}): func(f reflect.Value, buf io.Writer) {
-		buf = indenter(buf)
-		buf.Write([]byte("Caused by: "))
 		m := reflect.Indirect(f).Interface().(CauseableError)
 		if m.Cause == nil {
-			buf.Write([]byte("<nil>\n"))
 			return
 		}
+		buf = indenter(buf)
+		buf.Write([]byte("Caused by: "))
 		// since we're now in multiline mode, we want to wrap up with a br.
 		msg := []byte(m.Cause.Error())
 		buf.Write(msg)
