@@ -28,7 +28,7 @@ func (m TraceableError) WriteStack(w io.Writer) {
 		panic("meep:uninitialized")
 	}
 	for _, fr := range m.Stack.Frames {
-		w.Write(tab)
+		//w.Write(tab)
 		w.Write([]byte("·> "))
 		w.Write([]byte(fr.String()))
 		w.Write(br)

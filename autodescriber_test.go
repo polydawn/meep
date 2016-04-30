@@ -1,6 +1,11 @@
 package meep
 
-import "testing"
+import (
+	"fmt"
+	"os"
+	"strings"
+	"testing"
+)
 
 func TestReacharound(t *testing.T) {
 	type Woop struct {
@@ -28,8 +33,123 @@ func TestAutodescribeSimple(t *testing.T) {
 		Wonk string
 	}
 	err := New(&Woop{Wonk: "Bonk"})
-	expect := `Error[meep.Woop]: Wonk="Bonk"; `
+	expect := `Error[meep.Woop]: Wonk="Bonk";`
 	if expect != err.Error() {
 		t.Errorf("expected %q, got %q", expect, err.Error())
+	}
+}
+
+func TestAutodescribePlusCause(t *testing.T) {
+	type Woop struct {
+		AutodescribingError
+		CauseableError
+		Wonk string
+	}
+	err := New(&Woop{
+		Wonk:           "Bonk",
+		CauseableError: CauseableError{fmt.Errorf("lecause")},
+	})
+	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
+	expect += "\t" + `Caused by: lecause` + "\n"
+	actual := err.Error()
+	if expect != actual {
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+	}
+	t.Logf("this is what a very basic error with a nested cause looks like:\n>>>\n%s\n<<<\n", actual)
+}
+
+func TestAutodescribePlusTraceableCause(t *testing.T) {
+	type Woop struct {
+		AutodescribingError
+		CauseableError
+		Wonk string
+	}
+	type Boop struct {
+		TraceableError
+		AutodescribingError
+	}
+	err := New(&Woop{
+		Wonk: "Bonk",
+		CauseableError: CauseableError{
+			New(&Boop{}),
+		},
+	})
+	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
+	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
+	expect += "\t\t" + `Stack trace:` + "\n"
+	expect += "\t\t\t" + `·> /autodescriber_test.go:74: meep.TestAutodescribePlusTraceableCause` + "\n"
+	expect += "\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
+	expect += "\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
+	var cwd, _ = os.Getwd()
+	actual := err.Error()
+	actual = strings.Replace(actual, cwd, "", -1) // strip the local build path
+	if expect != actual {
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+	}
+	t.Logf("this is what errors with causes that have stacktraces look like :D\n>>>\n%s\n<<<\n", actual)
+}
+
+func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
+	type Woop struct {
+		AutodescribingError
+		CauseableError
+		Wonk string
+	}
+	type Boop struct {
+		AutodescribingError
+		CauseableError
+		TraceableError
+	}
+	err := New(&Woop{
+		Wonk: "Bonk",
+		CauseableError: CauseableError{
+			New(&Boop{
+				CauseableError: CauseableError{
+					New(&Boop{}),
+				},
+			}),
+		},
+	})
+	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
+	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
+	expect += "\t\t" + `Caused by: Error[meep.Boop]:` + "\n"
+	expect += "\t\t\t" + `Stack trace:` + "\n"
+	expect += "\t\t\t\t" + `·> /autodescriber_test.go:108: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
+	expect += "\t\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
+	expect += "\t\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
+	expect += "\t\t" + `Stack trace:` + "\n"
+	expect += "\t\t\t" + `·> /autodescriber_test.go:110: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
+	expect += "\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
+	expect += "\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
+	var cwd, _ = os.Getwd()
+	actual := err.Error()
+	actual = strings.Replace(actual, cwd, "", -1) // strip the local build path
+	if expect != actual {
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+	}
+
+	actual = strings.Replace(actual, "\t", "\\t\t", -1)
+	actual = strings.Replace(actual, "\n", "\\n\n", -1)
+	t.Logf("this is what errors with causes that have stacktraces look like :D\n>>>\n%s\n<<<\n", actual)
+}
+
+func TestAutodescribeManyFields(t *testing.T) {
+	type ErrBananaPancakes struct {
+		AutodescribingError
+		Alpha string
+		Beta  int
+		Gamma interface{}
+		Delta string
+	}
+	err := New(&ErrBananaPancakes{
+		Alpha: "unO",
+		Beta:  1,
+		Gamma: struct{}{},
+		Delta: "ca\ttorce",
+	})
+	expect := `Error[meep.ErrBananaPancakes]: Alpha="unO";Beta=1;Gamma=struct {}{};Delta="ca\ttorce";`
+	actual := err.Error()
+	if expect != actual {
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
 	}
 }
