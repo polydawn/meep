@@ -12,6 +12,21 @@ type Stack struct {
 
 type Frame uintptr
 
+/*
+	Captures a trace of the current stack.
+
+	You probably won't want to use this directly; instead, use a
+	`TraceableError` like this:
+
+		//type ErrXYZ struct { TraceableError }
+		err := meep.New(&ErrXYZ{})
+		// `err` now automatically has a stack capture!
+
+	There's nothing more magical here than `runtime.Callers`; just some
+	additional types and prettyprinting which are absent from stdlib
+	`runtime` because of stdlib's necessary avoidance of invoking complex
+	features in that (zerodep!) package.
+*/
 func CaptureStack() *Stack {
 	// This looks convoluted (and it is).  There's a reason:
 	//  `runtime.Callers` badly wants a uintptr slice, but we want another

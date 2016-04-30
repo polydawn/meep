@@ -2,14 +2,14 @@ package meep
 
 // Bundles all the behaviors!
 type Meep struct {
-	StackableError
+	TraceableError
 	CauseableError
 	AutodescribingError
 }
 
 // Errors with stacks!
-type StackableError struct {
-	Frames []uintptr
+type TraceableError struct {
+	Stack Stack
 }
 
 // Errors with other errors as their cause!
@@ -31,9 +31,5 @@ type GroupingError struct {
 ////
 
 func (m Meep) Error() string {
-	return m.AutodescribingError.ErrorMessage() + "\n" + m.StackableError.StackString()
-}
-
-func (m StackableError) StackString() string {
-	return "todo stack"
+	return m.AutodescribingError.ErrorMessage() + "\n" + m.TraceableError.StackString()
 }
