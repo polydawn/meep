@@ -11,7 +11,7 @@ func New(err error) error {
 		m.isMeepTraceable().Stack = *captureStack()
 	}
 
-	// for `CauseableError`:
+	// for `CausableError`:
 	//  (nothing really; it's mostly a hint to `AutodescribingError`.)
 
 	// for `GroupingError`:

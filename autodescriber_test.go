@@ -42,12 +42,12 @@ func TestAutodescribeSimple(t *testing.T) {
 func TestAutodescribePlusCause(t *testing.T) {
 	type Woop struct {
 		AutodescribingError
-		CauseableError
+		CausableError
 		Wonk string
 	}
 	err := New(&Woop{
-		Wonk:           "Bonk",
-		CauseableError: CauseableError{fmt.Errorf("lecause")},
+		Wonk:          "Bonk",
+		CausableError: CausableError{fmt.Errorf("lecause")},
 	})
 	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
 	expect += "\t" + `Caused by: lecause` + "\n"
@@ -61,7 +61,7 @@ func TestAutodescribePlusCause(t *testing.T) {
 func TestAutodescribePlusTraceableCause(t *testing.T) {
 	type Woop struct {
 		AutodescribingError
-		CauseableError
+		CausableError
 		Wonk string
 	}
 	type Boop struct {
@@ -70,7 +70,7 @@ func TestAutodescribePlusTraceableCause(t *testing.T) {
 	}
 	err := New(&Woop{
 		Wonk: "Bonk",
-		CauseableError: CauseableError{
+		CausableError: CausableError{
 			New(&Boop{}),
 		},
 	})
@@ -92,19 +92,19 @@ func TestAutodescribePlusTraceableCause(t *testing.T) {
 func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
 	type Woop struct {
 		AutodescribingError
-		CauseableError
+		CausableError
 		Wonk string
 	}
 	type Boop struct {
 		AutodescribingError
-		CauseableError
+		CausableError
 		TraceableError
 	}
 	err := New(&Woop{
 		Wonk: "Bonk",
-		CauseableError: CauseableError{
+		CausableError: CausableError{
 			New(&Boop{
-				CauseableError: CauseableError{
+				CausableError: CausableError{
 					New(&Boop{}),
 				},
 			}),

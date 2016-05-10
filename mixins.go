@@ -3,7 +3,7 @@ package meep
 // Bundles all the behaviors!
 type Meep struct {
 	TraceableError
-	CauseableError
+	CausableError
 	AutodescribingError
 }
 
@@ -13,7 +13,7 @@ type TraceableError struct {
 }
 
 // Errors with other errors as their cause!
-type CauseableError struct {
+type CausableError struct {
 	Cause error
 }
 
