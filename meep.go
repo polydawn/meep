@@ -14,5 +14,8 @@ func New(err error) error {
 	// for `CauseableError`:
 	//  (nothing really; it's mostly a hint to `AutodescribingError`.)
 
+	// for `GroupingError`:
+	//  (nothing really; it's mostly a hint to `AutodescribingError`.)
+
 	return err
 }
