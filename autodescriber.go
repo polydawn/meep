@@ -24,8 +24,8 @@ var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect
 		m := reflect.Indirect(f).Interface().(TraceableError)
 		m.WriteStack(buf)
 	},
-	reflect.TypeOf(CauseableError{}): func(f reflect.Value, buf io.Writer) {
-		m := reflect.Indirect(f).Interface().(CauseableError)
+	reflect.TypeOf(CausableError{}): func(f reflect.Value, buf io.Writer) {
+		m := reflect.Indirect(f).Interface().(CausableError)
 		if m.Cause == nil {
 			return
 		}
