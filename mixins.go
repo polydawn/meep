@@ -27,9 +27,3 @@ type GroupingError struct {
 	Specifically error
 	//gather func(error) bool // just a thought.  or `[]error` typeexamples might be better.
 }
-
-////
-
-func (m Meep) Error() string {
-	return m.AutodescribingError.ErrorMessage() + "\n" + m.TraceableError.StackString()
-}
