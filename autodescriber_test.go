@@ -78,11 +78,24 @@ func TestAutodescribePlusTraceableCause(t *testing.T) {
 	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
 	expect += "\t\t" + `Stack trace:` + "\n"
 	expect += "\t\t\t" + `·> /autodescriber_test.go:74: meep.TestAutodescribePlusTraceableCause` + "\n"
-	expect += "\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
-	expect += "\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
-	var cwd, _ = os.Getwd()
+
+	// Cleanup is fun...
 	actual := err.Error()
-	actual = strings.Replace(actual, cwd, "", -1) // strip the local build path
+	// First, remove the local build path for this project.
+	actual = stripCwd(actual)
+	// Lines we expect following this -- as of go1.4 -- are:
+	//   """
+	//   expect += "\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
+	//   expect += "\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
+	//   """
+	// And these are not universal or portable in *several* ways:
+	//   - the line numbers aren't constant across go versions
+	//   - the files aren't constant across platforms
+	//   - indeed even the *number* of lines is not constant across platforms and versions
+	//   - the prefix path may change if your GOROOT is unusual (as it is, on some CI platforms, even)
+	// So, we must simply truncate them.
+	actual = dropLastNLines(actual, 3) + "\n"
+
 	if expect != actual {
 		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
 	}
