@@ -62,19 +62,25 @@ func captureStack() *Stack {
 	following the source location info, the function name is suffixed.
 */
 func (pc Frame) String() string {
-	if pc == 0 {
-		return "unknown:0: unknown"
-	}
-	pc_actual := uintptr(pc) - 1 // yeah, read `runtime.Callers` *carefully*.
-	rtfn := runtime.FuncForPC(pc_actual)
-	if rtfn == nil {
-		return "unknown:0: unknown"
-	}
-	file, line := rtfn.FileLine(pc_actual)
+	file, line, fn := pc.Where()
 	return fmt.Sprintf(
 		"%s:%d: %s",
 		file,
 		line,
-		path.Base(rtfn.Name()), // this comes as fq pkg name, so drop "dirs"
+		fn,
 	)
+}
+
+func (pc Frame) Where() (file string, line int, fn string) {
+	if pc == 0 {
+		return "unknown", 0, "unknown"
+	}
+	pc_actual := uintptr(pc) - 1 // yeah, read `runtime.Callers` *carefully*.
+	rtfn := runtime.FuncForPC(pc_actual)
+	if rtfn == nil {
+		return "unknown", 0, "unknown"
+	}
+	file, line = rtfn.FileLine(pc_actual)
+	fn = path.Base(rtfn.Name()) // this comes as fq pkg name, so drop "dirs"
+	return
 }
