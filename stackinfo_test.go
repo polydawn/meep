@@ -17,10 +17,10 @@ func init() {
 	gover := runtime.Version()
 	// I have truely minimal desire to parse this "well".
 	// If it's not recognized, we'll assume it's new.
-	if gover[0:4] != "go1." {
+	if gover[0:3] != "go1." {
 		return
 	}
-	switch gover[5] {
+	switch gover[4] {
 	case '0', '1', '2', '3', '4':
 		use14fnnames = true
 	}
