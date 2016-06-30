@@ -35,16 +35,17 @@ type stackFrameExpectation struct {
 }
 
 func TestStacksStraightforward(t *testing.T) {
+	here := 38
 	var result meep.Stack
 	fn := func() {
 		result = *(meep.CaptureStack())
 	}
 	fixtures.WheeOne(fn)
 	expects := []stackFrameExpectation{
-		{0, cwd + "/stackinfo_test.go", 40, "meep_test.func·001", "meep_test.TestStacksStraightforward.func1"}, // right here, where we call `CaptureStack`
-		{1, cwd + "/fixtures/stack1.go", 9, "", "fixtures.wheeTwo"},                                            // should be in the body of the func
-		{2, cwd + "/fixtures/stack1.go", 5, "", "fixtures.WheeOne"},                                            // should be in the body of the func
-		{3, cwd + "/stackinfo_test.go", 42, "", "meep_test.TestStacksStraightforward"},                         // right here, where we call `fixtures.*`
+		{0, cwd + "/stackinfo_test.go", here + 3, "meep_test.func·001", "meep_test.TestStacksStraightforward.func1"}, // right here, where we call `CaptureStack`
+		{1, cwd + "/fixtures/stack1.go", 9, "", "fixtures.wheeTwo"},                                                  // should be in the body of the func
+		{2, cwd + "/fixtures/stack1.go", 5, "", "fixtures.WheeOne"},                                                  // should be in the body of the func
+		{3, cwd + "/stackinfo_test.go", here + 5, "", "meep_test.TestStacksStraightforward"},                         // right here, where we call `fixtures.*`
 		// No need to get overly precise about line numbers in the stdlib:
 		//{4, "/usr/local/go/src/testing/testing.go", 447, "", "testing.tRunner"},
 		//{5, "/usr/local/go/src/runtime/asm_amd64.s", 2232, "", "runtime.goexit"},
@@ -54,6 +55,7 @@ func TestStacksStraightforward(t *testing.T) {
 }
 
 func TestStacksPlusDeferral(t *testing.T) {
+	here := 58
 	var result meep.Stack
 	fn := func() {
 		result = *(meep.CaptureStack())
@@ -61,10 +63,10 @@ func TestStacksPlusDeferral(t *testing.T) {
 	fixtures.WheeTree(fn)
 	expects := []stackFrameExpectation{
 		// note the total lack of 'wheeTwo'; it's called, but already returned before the defer path is hit, so of course it's absent here.
-		{0, cwd + "/stackinfo_test.go", 59, "meep_test.func·002", "meep_test.TestStacksPlusDeferral.func1"}, // right here, where we call `CaptureStack`
-		{1, cwd + "/fixtures/stack1.go", 19, "", "fixtures.wheedee"},                                        // should be in the body of the func (natch, the declare location -- the defer location never shows up; that's not a new func)
-		{2, cwd + "/fixtures/stack1.go", 16, "", "fixtures.WheeTree"},                                       // golang considers 'defer' to run on the last line of the parent func.  even if that's "}\n".
-		{3, cwd + "/stackinfo_test.go", 61, "", "meep_test.TestStacksPlusDeferral"},                         // right here, where we call `fixtures.*`
+		{0, cwd + "/stackinfo_test.go", here + 3, "meep_test.func·002", "meep_test.TestStacksPlusDeferral.func1"}, // right here, where we call `CaptureStack`
+		{1, cwd + "/fixtures/stack1.go", 19, "", "fixtures.wheedee"},                                              // should be in the body of the func (natch, the declare location -- the defer location never shows up; that's not a new func)
+		{2, cwd + "/fixtures/stack1.go", 16, "", "fixtures.WheeTree"},                                             // golang considers 'defer' to run on the last line of the parent func.  even if that's "}\n".
+		{3, cwd + "/stackinfo_test.go", here + 5, "", "meep_test.TestStacksPlusDeferral"},                         // right here, where we call `fixtures.*`
 		// No need to get overly precise about line numbers in the stdlib:
 		//{4, "/usr/local/go/src/testing/testing.go", 447, "", "testing.tRunner"},
 		//{5, "/usr/local/go/src/runtime/asm_amd64.s", 2232, "", "runtime.goexit"},
@@ -74,6 +76,7 @@ func TestStacksPlusDeferral(t *testing.T) {
 }
 
 func TestStacksPanickingInDefersOhMy(t *testing.T) {
+	here := 79
 	var result meep.Stack
 	fixtures.BeesBuzz(func() {
 		result = *(meep.CaptureStack())
@@ -81,15 +84,15 @@ func TestStacksPanickingInDefersOhMy(t *testing.T) {
 	expects := []stackFrameExpectation{
 		// note the total lack of reference to where "recover" is called.  (That happened after the stack capture... not that that really matters;
 		//   if you flip the recover before the BeesBuzz defer'd func's call to our thunk, this thing on line 9 just moves to 10, that's it -- there's no other flow change.)
-		{0, cwd + "/stackinfo_test.go", 79, "meep_test.func·003", "meep_test.TestStacksPanickingInDefersOhMy.func1"}, // right here, where we call `CaptureStack` in our thunk
-		{1, cwd + "/fixtures/stack2.go", 9, "fixtures.func·002", "fixtures.BeesBuzz.func1"},                          // the line in the deferred function that called our thunk
+		{0, cwd + "/stackinfo_test.go", here + 3, "meep_test.func·003", "meep_test.TestStacksPanickingInDefersOhMy.func1"}, // right here, where we call `CaptureStack` in our thunk
+		{1, cwd + "/fixtures/stack2.go", 9, "fixtures.func·002", "fixtures.BeesBuzz.func1"},                                // the line in the deferred function that called our thunk
 		// No need to get overly precise about line numbers in the stdlib:
 		//{2, "/usr/local/go/src/runtime/asm_amd64.s", 401, "", "runtime.call16"}, // if this isn't a single line on some platforms... uff.
 		//{3, "/usr/local/go/src/runtime/panic.go", 387, "", "runtime.gopanic"},  // it might be reasonable to detect these and elide everything following from `runtime.*`.
-		{4, cwd + "/fixtures/stack2.go", 22, "", "fixtures.buzzkill"},                        // the line that panicked!
-		{5, cwd + "/fixtures/stack2.go", 19, "", "fixtures.beesWuz"},                         // the trailing `}` of `beesWuz`, because we left it via defer
-		{6, cwd + "/fixtures/stack2.go", 14, "", "fixtures.BeesBuzz"},                        // the body line the calls down to `beesWuz`
-		{7, cwd + "/stackinfo_test.go", 80, "", "meep_test.TestStacksPanickingInDefersOhMy"}, // obtw!  when we split the `fixtures.*()` *invocation* across lines, this becomes the last one!
+		{4, cwd + "/fixtures/stack2.go", 22, "", "fixtures.buzzkill"},                              // the line that panicked!
+		{5, cwd + "/fixtures/stack2.go", 19, "", "fixtures.beesWuz"},                               // the trailing `}` of `beesWuz`, because we left it via defer
+		{6, cwd + "/fixtures/stack2.go", 14, "", "fixtures.BeesBuzz"},                              // the body line the calls down to `beesWuz`
+		{7, cwd + "/stackinfo_test.go", here + 4, "", "meep_test.TestStacksPanickingInDefersOhMy"}, // obtw!  when we split the `fixtures.*()` *invocation* across lines, this becomes the last one!
 		// No need to get overly precise about line numbers in the stdlib",
 		//{8, "/usr/local/go/src/testing/testing.go", 447, "", "testing.tRunner"},
 		//{9, "/usr/local/go/src/runtime/asm_amd64.s", 2232, "", "runtime.goexit"},
