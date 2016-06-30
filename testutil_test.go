@@ -36,3 +36,27 @@ func dropLinesContaining(in, drop string) string {
 	}
 	return strings.Join(keeps, "\n")
 }
+
+/*
+	Ok, this one is really wild.
+
+	Stacks in earlier versions of go would report functions like this...
+
+		meep/fixtures/stack2.go:9: fixtures.func·002
+
+	And newer versions now format them like this:
+
+		meep/fixtures/stack2.go:9: fixtures.BeesBuzz.func1
+
+	(Notice that this only makes an appearance with unnamed funcs.)
+	Now, the new version is totally super better, yes, yayy, more contextual
+	information by a lightyear.
+
+	But it means our tests either need to alias this part and switch on go versions,
+	or... just not look at it.
+	This function is to do the latter.
+*/
+func stripFuncsFromStack(in string) string {
+	// NO. THIS IS TERRIBLE
+	return ""
+}
