@@ -1,6 +1,7 @@
 package meep_test
 
 import (
+	"fmt"
 	"os"
 	"runtime"
 	"testing"
@@ -15,6 +16,7 @@ var use14fnnames bool
 
 func init() {
 	gover := runtime.Version()
+	fmt.Fprintf(os.Stderr, "go version reports as %q\n", gover)
 	// I have truely minimal desire to parse this "well".
 	// If it's not recognized, we'll assume it's new.
 	if gover[0:3] != "go1." {
@@ -35,7 +37,7 @@ type stackFrameExpectation struct {
 }
 
 func TestStacksStraightforward(t *testing.T) {
-	here := 38
+	here := 40
 	var result meep.Stack
 	fn := func() {
 		result = *(meep.CaptureStack())
@@ -55,7 +57,7 @@ func TestStacksStraightforward(t *testing.T) {
 }
 
 func TestStacksPlusDeferral(t *testing.T) {
-	here := 58
+	here := 60
 	var result meep.Stack
 	fn := func() {
 		result = *(meep.CaptureStack())
@@ -76,7 +78,7 @@ func TestStacksPlusDeferral(t *testing.T) {
 }
 
 func TestStacksPanickingInDefersOhMy(t *testing.T) {
-	here := 79
+	here := 81
 	var result meep.Stack
 	fixtures.BeesBuzz(func() {
 		result = *(meep.CaptureStack())
