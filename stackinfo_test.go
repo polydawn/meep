@@ -19,7 +19,7 @@ func init() {
 	fmt.Fprintf(os.Stderr, "go version reports as %q\n", gover)
 	// I have truely minimal desire to parse this "well".
 	// If it's not recognized, we'll assume it's new.
-	if gover[0:3] != "go1." {
+	if gover[0:4] != "go1." {
 		return
 	}
 	switch gover[4] {
