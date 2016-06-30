@@ -22,3 +22,17 @@ func dropLastNLines(in string, ndrop int) string {
 	}
 	return ""
 }
+
+// doesn't preserve whether or not you had a trailing break
+// because i don't feel like replacing stdlib `strings.Split` with one that does
+func dropLinesContaining(in, drop string) string {
+	lines := strings.Split(in, "\n")
+	keeps := make([]string, 0, len(lines))
+	for _, line := range lines {
+		if strings.Contains(line, drop) {
+			continue
+		}
+		keeps = append(keeps, line)
+	}
+	return strings.Join(keeps, "\n")
+}
