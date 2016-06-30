@@ -106,9 +106,9 @@ func TestStacksPanickingInDefersOhMy(t *testing.T) {
 func assertStack(t *testing.T, result meep.Stack, expects []stackFrameExpectation, expectLen int) {
 	// Some quick cleanup on the expectations:
 	// If no exceptions were specified, the old 1.4 funcname is expected to be same as the new
-	for _, ex := range expects {
+	for i, ex := range expects {
 		if ex.func14 == "" {
-			ex.func14 = ex.func15
+			expects[i].func14 = ex.func15
 		}
 	}
 
