@@ -51,3 +51,9 @@ if you decide your type needs that!
 
 Typed errors are pretty much universally acknowledged to beat the pants off `fmt.Errorf("unmangably handwavey")` stringy errors.
 **Now start using them**, because it's *easy*, and you can have stacks and all these other bonuses too!
+
+
+Availability
+------------
+
+`meep` works with any recent version of Go, going as far back as go1.2.
