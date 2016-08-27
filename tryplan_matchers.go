@@ -12,3 +12,9 @@ type tryPredicateType struct{ typ reflect.Type }
 func (t tryPredicateType) Q(e error) bool {
 	return reflect.TypeOf(e) == t.typ
 }
+
+type tryPredicateVal struct{ val interface{} }
+
+func (t tryPredicateVal) Q(e error) bool {
+	return e == t.val
+}

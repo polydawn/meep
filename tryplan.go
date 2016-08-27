@@ -35,3 +35,11 @@ func (p TryPlan) Catch(typeExample error, handler TryHandler) TryPlan {
 	})
 	return p
 }
+
+func (p TryPlan) CatchVal(ptrOrVal error, handler TryHandler) TryPlan {
+	p.matchers = append(p.matchers, tryMatcher{
+		predicate: tryPredicateVal{ptrOrVal}.Q,
+		handler:   handler,
+	})
+	return p
+}
