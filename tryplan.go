@@ -18,9 +18,14 @@ import (
 		CatchExotic(handler) // anyone who panics as a non error goes here.  nobody should do that, frankly.
 		CatchAll(handler) // called as a last resort
 
+	Errors are checked against handlers in the order they're added.
+
 	If an error passes all the way through a TryPlan without matching any of
 	the configured handlers, it is raised as a panic.
+
 	If you want to catch *everything*, use the CatchAll handler.
+	If using CatchAll, be sure to add it last -- it's really just syntactic
+	sugar for an always-true predicate.
 */
 type TryPlan struct {
 	matchers []tryMatcher
@@ -39,6 +44,30 @@ func (p TryPlan) Catch(typeExample error, handler TryHandler) TryPlan {
 func (p TryPlan) CatchVal(ptrOrVal error, handler TryHandler) TryPlan {
 	p.matchers = append(p.matchers, tryMatcher{
 		predicate: tryPredicateVal{ptrOrVal}.Q,
+		handler:   handler,
+	})
+	return p
+}
+
+func (p TryPlan) CatchPredicate(predicate func(error) bool, handler TryHandler) TryPlan {
+	p.matchers = append(p.matchers, tryMatcher{
+		predicate: predicate,
+		handler:   handler,
+	})
+	return p
+}
+
+func (p TryPlan) CatchExotic(handler TryHandler) TryPlan {
+	p.matchers = append(p.matchers, tryMatcher{
+		predicate: tryPredicateType{typeof_ErrUntypedPanic}.Q,
+		handler:   handler,
+	})
+	return p
+}
+
+func (p TryPlan) CatchAll(handler TryHandler) TryPlan {
+	p.matchers = append(p.matchers, tryMatcher{
+		predicate: trueThunk,
 		handler:   handler,
 	})
 	return p

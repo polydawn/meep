@@ -31,6 +31,8 @@ func coerce(rcvrd interface{}) error {
 	returns the first TryHandler the plan matches, or nil if no matches.
 */
 func match(err error, plan TryPlan) TryHandler {
+	// Can you beat this with a case switch?  Absolutely.
+	//  We'd have to use reflection to generate one though.
 	for _, matcher := range plan.matchers {
 		if matcher.predicate(err) {
 			return matcher.handler

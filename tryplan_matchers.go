@@ -18,3 +18,7 @@ type tryPredicateVal struct{ val interface{} }
 func (t tryPredicateVal) Q(e error) bool {
 	return e == t.val
 }
+
+var typeof_ErrUntypedPanic = reflect.TypeOf(&ErrUntypedPanic{})
+
+func trueThunk(error) bool { return true }
