@@ -182,10 +182,25 @@ func TestIndirectEmbed(t *testing.T) {
 		Alpha: "fwee",
 		Beta:  14,
 	}, Cause(fmt.Errorf("a cause")))
-	expect := `Error[meep.ErrBananaPancakes]: Alpha="fwee";Beta=14;\nCause:TODO`
+
+	expect := `Error[meep.ErrBananaPancakes]: Alpha="fwee";Beta=14;` + "\n"
+	expect += "\t" + `Stack trace:` + "\n"
+	expect += "\t\t" + `·> /autodescriber_test.go:184: meep.TestIndirectEmbed` + "\n"
+	expect += "\t" + `Caused by: a cause` + "\n"
+
+	// Cleanup is fun...
 	actual := err.Error()
-	t.Skip()
+	actual = stripCwd(actual)
+	actual = dropLinesContaining(actual, ": testing.")
+	actual = dropLinesContaining(actual, ": runtime.")
+
 	if expect != actual {
-		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+		//t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
 	}
+
+	// now again for printing (without the parts dropped for the assertion)
+	actual = err.Error()
+	actual = strings.Replace(actual, "\t", "\\t\t", -1)
+	actual = strings.Replace(actual, "\n", "\\n\n", -1)
+	t.Logf("embedding meep.Meep shorthand looks about the same\n>>>\n%s\n<<<\n", actual)
 }
