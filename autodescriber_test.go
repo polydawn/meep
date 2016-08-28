@@ -193,6 +193,16 @@ func TestIndirectEmbed(t *testing.T) {
 	actual = stripCwd(actual)
 	actual = dropLinesContaining(actual, ": testing.")
 	actual = dropLinesContaining(actual, ": runtime.")
+	// Ok, this *really* gets to me.
+	// Apparently a multi-line "New" func call:
+	//  - in go1.4 and before, it's always seen from the last line.
+	//  - in go1.5 and 1.6, is seen from the first line.
+	//  - ... except when the race detector is on, in which case it's last line.
+	//  - in go1.7 and beyond, it's always seen from the last line again.
+	// Wild, right?  Whee.
+	// See https://travis-ci.org/polydawn/meep/builds/155778432 .
+	// So we'll just take that "first line" line number and uh.  Touch it a little.
+	actual = strings.Replace(actual, ":181:", ":184:", 1)
 
 	if expect != actual {
 		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
