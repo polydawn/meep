@@ -15,7 +15,9 @@ type meepAutodescriber interface {
 func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { return m }
 
 var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect.Type]func(reflect.Value, io.Writer){
-	reflect.TypeOf(Meep{}): nil,
+	reflect.TypeOf(Meep{}): func(f reflect.Value, buf io.Writer) {
+		//describeFields(f, buf.(*bytes.Buffer))
+	},
 	reflect.TypeOf(TraceableError{}): func(f reflect.Value, buf io.Writer) {
 		buf = indenter(buf)
 		buf.Write([]byte("Stack trace:\n"))
@@ -73,12 +75,19 @@ func (m *AutodescribingError) ErrorMessage() string {
 	buf.WriteString(rv_self.Type().String())
 	buf.WriteString("]:")
 	// Iterate over fields.
+	describeFields(rv_self, buf)
+	// That's it.  Return the buffer results.
+	return buf.String()
+}
+
+func describeFields(subject reflect.Value, buf *bytes.Buffer) {
+	// Iterate over fields.
 	// If we hit any customs, save em; they serialize after other fields.
-	nField := rv_self.NumField()
+	nField := subject.NumField()
 	havePrintedFields := false
 	var custom []func()
 	for i := 0; i < nField; i++ {
-		f := rv_self.Field(i)
+		f := subject.Field(i)
 		// if it's one of the special/multiliners, stack it up for later
 		if fn, ok := customDescribe[f.Type()]; ok {
 			if fn != nil {
@@ -91,7 +100,7 @@ func (m *AutodescribingError) ErrorMessage() string {
 			buf.WriteByte(' ')
 		}
 		havePrintedFields = true
-		buf.WriteString(rv_self.Type().Field(i).Name)
+		buf.WriteString(subject.Type().Field(i).Name)
 		buf.WriteByte('=')
 		buf.WriteString(fmt.Sprintf("%#v", f.Interface()))
 		buf.WriteByte(';')
@@ -105,8 +114,6 @@ func (m *AutodescribingError) ErrorMessage() string {
 		fn()
 		// customs are expected to finish with one trailing \n apiece
 	}
-	// That's it.  Return the buffer results.
-	return buf.String()
 }
 
 /*

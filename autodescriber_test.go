@@ -171,3 +171,21 @@ func TestAutodescribeManyFields(t *testing.T) {
 		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
 	}
 }
+
+func TestIndirectEmbed(t *testing.T) {
+	type ErrBananaPancakes struct {
+		Meep
+		Alpha string
+		Beta  int
+	}
+	err := New(&ErrBananaPancakes{
+		Alpha: "fwee",
+		Beta:  14,
+	}, Cause(fmt.Errorf("a cause")))
+	expect := `Error[meep.ErrBananaPancakes]: Alpha="fwee";Beta=14;\nCause:TODO`
+	actual := err.Error()
+	t.Skip()
+	if expect != actual {
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+	}
+}
