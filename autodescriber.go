@@ -14,47 +14,6 @@ type meepAutodescriber interface {
 // note that this function applies if you have a type which embeds this one sans-*, but you have a ref to that type.
 func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { return m }
 
-var customDescribe map[reflect.Type]func(reflect.Value, io.Writer) = map[reflect.Type]func(reflect.Value, io.Writer){
-	reflect.TypeOf(Meep{}): nil,
-	reflect.TypeOf(TraceableError{}): func(f reflect.Value, buf io.Writer) {
-		buf = indenter(buf)
-		buf.Write([]byte("Stack trace:\n"))
-		buf = indenter(buf)
-		//buf.(*rediscipliner).prefix = []byte{} // stacks already tab themselves in once
-		m := reflect.Indirect(f).Interface().(TraceableError)
-		m.WriteStack(buf)
-	},
-	reflect.TypeOf(CausableError{}): func(f reflect.Value, buf io.Writer) {
-		m := reflect.Indirect(f).Interface().(CausableError)
-		if m.Cause == nil {
-			return
-		}
-		buf = indenter(buf)
-		buf.Write([]byte("Caused by: "))
-		// since we're now in multiline mode, we want to wrap up with a br.
-		msg := []byte(m.Cause.Error())
-		buf.Write(msg)
-		if len(msg) == 0 || msg[len(msg)-1] != '\n' {
-			buf.Write(br)
-		}
-	},
-	reflect.TypeOf(GroupingError{}): func(f reflect.Value, buf io.Writer) {
-		m := reflect.Indirect(f).Interface().(GroupingError)
-		if m.Specifically == nil {
-			return
-		}
-		buf = indenter(buf)
-		buf.Write([]byte("Specifically: "))
-		// since we're now in multiline mode, we want to wrap up with a br.
-		msg := []byte(m.Specifically.Error())
-		buf.Write(msg)
-		if len(msg) == 0 || msg[len(msg)-1] != '\n' {
-			buf.Write(br)
-		}
-	},
-	reflect.TypeOf(AutodescribingError{}): nil,
-}
-
 func (m *AutodescribingError) ErrorMessage() string {
 	// Check for initialization.
 	// Can't do much of use if we didn't get initialized with a selfie reference.
@@ -73,14 +32,21 @@ func (m *AutodescribingError) ErrorMessage() string {
 	buf.WriteString(rv_self.Type().String())
 	buf.WriteString("]:")
 	// Iterate over fields.
+	describeFields(rv_self, buf)
+	// That's it.  Return the buffer results.
+	return buf.String()
+}
+
+func describeFields(subject reflect.Value, buf *bytes.Buffer) {
+	// Iterate over fields.
 	// If we hit any customs, save em; they serialize after other fields.
-	nField := rv_self.NumField()
+	nField := subject.NumField()
 	havePrintedFields := false
 	var custom []func()
 	for i := 0; i < nField; i++ {
-		f := rv_self.Field(i)
+		f := subject.Field(i)
 		// if it's one of the special/multiliners, stack it up for later
-		if fn, ok := customDescribe[f.Type()]; ok {
+		if consumed, fn := customDescribe(f.Type()); consumed {
 			if fn != nil {
 				custom = append(custom, func() { fn(f, buf) })
 			}
@@ -91,7 +57,7 @@ func (m *AutodescribingError) ErrorMessage() string {
 			buf.WriteByte(' ')
 		}
 		havePrintedFields = true
-		buf.WriteString(rv_self.Type().Field(i).Name)
+		buf.WriteString(subject.Type().Field(i).Name)
 		buf.WriteByte('=')
 		buf.WriteString(fmt.Sprintf("%#v", f.Interface()))
 		buf.WriteByte(';')
@@ -99,14 +65,68 @@ func (m *AutodescribingError) ErrorMessage() string {
 	// Now go back and let the customs have their say.
 	// (If there are any: Start with a clean line; we're now an ML result.)
 	if len(custom) > 0 {
-		buf.WriteByte('\n')
+		inspection := buf.Bytes() // fortunately this is copy free with go slices
+		hasTrailingBreak := inspection[len(inspection)-1] == '\n'
+		if !hasTrailingBreak {
+			buf.WriteByte('\n')
+		}
 	}
 	for _, fn := range custom {
 		fn()
 		// customs are expected to finish with one trailing \n apiece
 	}
-	// That's it.  Return the buffer results.
-	return buf.String()
+}
+
+func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, io.Writer)) {
+	switch typ {
+	case reflect.TypeOf(Meep{}):
+		return true, func(f reflect.Value, buf io.Writer) {
+			describeFields(f, buf.(*bytes.Buffer))
+		}
+	case reflect.TypeOf(TraceableError{}):
+		return true, func(f reflect.Value, buf io.Writer) {
+			buf = indenter(buf)
+			buf.Write([]byte("Stack trace:\n"))
+			buf = indenter(buf)
+			//buf.(*rediscipliner).prefix = []byte{} // stacks already tab themselves in once
+			m := reflect.Indirect(f).Interface().(TraceableError)
+			m.WriteStack(buf)
+		}
+	case reflect.TypeOf(CausableError{}):
+		return true, func(f reflect.Value, buf io.Writer) {
+			m := reflect.Indirect(f).Interface().(CausableError)
+			if m.Cause == nil {
+				return
+			}
+			buf = indenter(buf)
+			buf.Write([]byte("Caused by: "))
+			// since we're now in multiline mode, we want to wrap up with a br.
+			msg := []byte(m.Cause.Error())
+			buf.Write(msg)
+			if len(msg) == 0 || msg[len(msg)-1] != '\n' {
+				buf.Write(br)
+			}
+		}
+	case reflect.TypeOf(GroupingError{}):
+		return true, func(f reflect.Value, buf io.Writer) {
+			m := reflect.Indirect(f).Interface().(GroupingError)
+			if m.Specifically == nil {
+				return
+			}
+			buf = indenter(buf)
+			buf.Write([]byte("Specifically: "))
+			// since we're now in multiline mode, we want to wrap up with a br.
+			msg := []byte(m.Specifically.Error())
+			buf.Write(msg)
+			if len(msg) == 0 || msg[len(msg)-1] != '\n' {
+				buf.Write(br)
+			}
+		}
+	case reflect.TypeOf(AutodescribingError{}):
+		return true, nil
+	default:
+		return false, nil
+	}
 }
 
 /*
