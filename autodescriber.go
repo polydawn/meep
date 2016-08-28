@@ -65,7 +65,11 @@ func describeFields(subject reflect.Value, buf *bytes.Buffer) {
 	// Now go back and let the customs have their say.
 	// (If there are any: Start with a clean line; we're now an ML result.)
 	if len(custom) > 0 {
-		buf.WriteByte('\n')
+		inspection := buf.Bytes() // fortunately this is copy free with go slices
+		hasTrailingBreak := inspection[len(inspection)-1] == '\n'
+		if !hasTrailingBreak {
+			buf.WriteByte('\n')
+		}
 	}
 	for _, fn := range custom {
 		fn()

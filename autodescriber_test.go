@@ -195,7 +195,7 @@ func TestIndirectEmbed(t *testing.T) {
 	actual = dropLinesContaining(actual, ": runtime.")
 
 	if expect != actual {
-		//t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
+		t.Errorf("mismatch:\n  expected %q\n       got %q", expect, actual)
 	}
 
 	// now again for printing (without the parts dropped for the assertion)
