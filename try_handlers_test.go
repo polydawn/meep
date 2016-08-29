@@ -1,6 +1,7 @@
 package meep_test
 
 import (
+	"strings"
 	"testing"
 
 	"."
@@ -14,7 +15,12 @@ func TestTryHandlerExplain(t *testing.T) {
 	plan := meep.TryPlan{}.
 		Catch(&Wonk{}, meep.TryHandlerExplain(&Bonk{})).
 		Catch(&Bonk{}, meep.TryHandlerExplain(&Tonk{})).
-		Catch(&Tonk{}, func(e error) { t.Logf("%s", e) })
+		Catch(&Tonk{}, func(e error) {
+		actual := e.Error()
+		actual = strings.Replace(actual, "\t", "\\t\t", -1)
+		actual = strings.Replace(actual, "\n", "\\n\n", -1)
+		t.Logf("a fantastic cause tree\n>>>\n%s\n<<<\n", actual)
+	})
 
 	meep.Try(func() {
 		meep.Try(func() {
