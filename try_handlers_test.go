@@ -7,14 +7,14 @@ import (
 	"."
 )
 
-func TestTryHandlerExplain(t *testing.T) {
+func TestTryHandlerMapto(t *testing.T) {
 	type Wonk struct{ meep.Meep }
 	type Bonk struct{ meep.Meep }
 	type Tonk struct{ meep.Meep }
 
 	plan := meep.TryPlan{}.
-		Catch(&Wonk{}, meep.TryHandlerExplain(&Bonk{})).
-		Catch(&Bonk{}, meep.TryHandlerExplain(&Tonk{})).
+		Catch(&Wonk{}, meep.TryHandlerMapto(&Bonk{})).
+		Catch(&Bonk{}, meep.TryHandlerMapto(&Tonk{})).
 		Catch(&Tonk{}, func(e error) {
 		actual := e.Error()
 		actual = strings.Replace(actual, "\t", "\\t\t", -1)
