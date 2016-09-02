@@ -18,13 +18,13 @@ That's the output of meep errors...
 
 ```golang
 type Woop struct {
-    meep.AutodescribingError
+    meep.TraitAutodescribing
     meep.CauseableError
     Wonk string
 }
 type Boop struct {
-    meep.TraceableError
-    meep.AutodescribingError
+    meep.TraitTraceable
+    meep.TraitAutodescribing
 }
 ```
 

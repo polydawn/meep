@@ -43,7 +43,7 @@ func DamageControl(handle func(error)) {
 	used by `DamageControl` to wrap recovered panics.
 */
 type ErrUnderspecified struct {
-	AutodescribingError
-	TraceableError
-	CausableError
+	TraitAutodescribing
+	TraitTraceable
+	TraitCausable
 }

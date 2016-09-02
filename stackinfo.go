@@ -16,9 +16,9 @@ type Frame uintptr
 	Captures a trace of the current stack.
 
 	You probably won't want to use this directly; instead, use a
-	`TraceableError` like this:
+	`TraitTraceable` like this:
 
-		//type ErrXYZ struct { TraceableError }
+		//type ErrXYZ struct { TraitTraceable }
 		err := meep.New(&ErrXYZ{})
 		// `err` now automatically has a stack capture!
 

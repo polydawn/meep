@@ -9,7 +9,7 @@ import (
 
 func ExampleTraceableErr() {
 	type Woop struct {
-		meep.TraceableError
+		meep.TraitTraceable
 		error
 	}
 	err := meep.New(&Woop{})
@@ -33,5 +33,5 @@ func ExampleTraceableErr() {
 	fmt.Println(str)
 
 	// Output:
-	//	·> /traceable_test.go:15: meep_test.ExampleTraceableErr
+	//	·> /trait_traceable_test.go:15: meep_test.ExampleTraceableErr
 }

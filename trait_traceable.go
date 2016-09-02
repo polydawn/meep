@@ -5,25 +5,30 @@ import (
 	"io"
 )
 
-type meepTraceable interface {
-	isMeepTraceable() *TraceableError
+// Errors with stacks!
+type TraitTraceable struct {
+	Stack Stack
 }
 
-func (m *TraceableError) isMeepTraceable() *TraceableError { return m }
+type meepTraceable interface {
+	isMeepTraceable() *TraitTraceable
+}
+
+func (m *TraitTraceable) isMeepTraceable() *TraitTraceable { return m }
 
 /*
 	Return the stack of the error formatted as a human readable string:
 	one frame per line.  Each line lists the source file, line number, and
 	the name of the function.
 */
-func (m TraceableError) StackString() string {
+func (m TraitTraceable) StackString() string {
 	var buf bytes.Buffer
 	m.WriteStack(&buf)
 	return buf.String()
 }
 
 // Same job as StackString; use StackString for convenience, use this for performance.
-func (m TraceableError) WriteStack(w io.Writer) {
+func (m TraitTraceable) WriteStack(w io.Writer) {
 	if len(m.Stack.Frames) == 0 {
 		panic("meep:uninitialized")
 	}

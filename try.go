@@ -47,7 +47,7 @@ func match(err error, plan TryPlan) TryHandler {
 	The `Try` system will coerce all non-error types to this automatically.
 */
 type ErrUntypedPanic struct {
-	AutodescribingError
-	TraceableError
+	TraitAutodescribing
+	TraitTraceable
 	Cause interface{}
 }
