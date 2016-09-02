@@ -112,21 +112,6 @@ func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, i
 				buf.Write(br)
 			}
 		}
-	case reflect.TypeOf(GroupingError{}):
-		return true, func(f reflect.Value, buf io.Writer) {
-			m := reflect.Indirect(f).Interface().(GroupingError)
-			if m.Specifically == nil {
-				return
-			}
-			buf = indenter(buf)
-			buf.Write([]byte("Specifically: "))
-			// since we're now in multiline mode, we want to wrap up with a br.
-			msg := []byte(m.Specifically.Error())
-			buf.Write(msg)
-			if len(msg) == 0 || msg[len(msg)-1] != '\n' {
-				buf.Write(br)
-			}
-		}
 	case reflect.TypeOf(TraitAutodescribing{}):
 		return true, nil
 	default:
