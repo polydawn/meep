@@ -7,8 +7,9 @@ import (
 )
 
 func ExampleTry() {
+
 	meep.Try(func() {
-		panic(meep.New(&meep.Meep{}))
+		panic(meep.New(&meep.AllTraits{}))
 	}, meep.TryPlan{}.Catch(&meep.ErrUnderspecified{}, func(error) {
 		fmt.Println("caught ErrUnderspecified")
 	}).CatchAll(func(error) {

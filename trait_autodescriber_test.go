@@ -174,7 +174,7 @@ func TestAutodescribeManyFields(t *testing.T) {
 
 func TestIndirectEmbed(t *testing.T) {
 	type ErrBananaPancakes struct {
-		Meep
+		AllTraits
 		Alpha string
 		Beta  int
 	}

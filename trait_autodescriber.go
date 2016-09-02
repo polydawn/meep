@@ -84,7 +84,7 @@ func describeFields(subject reflect.Value, buf *bytes.Buffer) {
 
 func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, io.Writer)) {
 	switch typ {
-	case reflect.TypeOf(Meep{}):
+	case reflect.TypeOf(AllTraits{}):
 		return true, func(f reflect.Value, buf io.Writer) {
 			describeFields(f, buf.(*bytes.Buffer))
 		}
