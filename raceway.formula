@@ -1,0 +1,22 @@
+inputs:
+	"/":
+		type: "tar"
+		hash: "aLMH4qK1EdlPDavdhErOs0BPxqO0i6lUaeRE4DuUmnNMxhHtF56gkoeSulvwWNqT"
+		silo: "http+ca://repeatr.s3.amazonaws.com/assets/"
+	"/app/go":
+		type: "tar"
+		hash: "_w1KmQE3kxC7fDwrJ8OUIDjnvmDnOCgdfyyn_FhGgy1nKxt939JMhwfO3Uv8ZIcp"
+		silo: "https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz"
+action:
+	command:
+		- "/bin/bash"
+		- "-c"
+		- |
+			set -euo pipefail
+			export GOROOT=/app/go/go
+			export PATH=$PATH:/app/go/go/bin
+			
+			# move the repo to a different dir name because some of our tests include
+			#  the package name and go relies on the parent dir more than i'd like.
+			cp -a /task /tmp/meep ; cd /tmp/meep
+			./goad test
