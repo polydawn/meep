@@ -8,7 +8,7 @@ import (
 
 func TestReacharound(t *testing.T) {
 	type Woop struct {
-		AutodescribingError
+		TraitAutodescribing
 		Wonk string
 	}
 	var err error
@@ -18,17 +18,17 @@ func TestReacharound(t *testing.T) {
 	if woop.Wonk != "Bonk" {
 		t.Errorf("Bonk somehow became %q", woop.Wonk)
 	}
-	if woop.AutodescribingError.self == nil {
+	if woop.TraitAutodescribing.self == nil {
 		t.Errorf("No impact")
 	}
-	if woop.AutodescribingError.self != err {
+	if woop.TraitAutodescribing.self != err {
 		t.Errorf("Drat")
 	}
 }
 
 func TestAutodescribeSimple(t *testing.T) {
 	type Woop struct {
-		AutodescribingError
+		TraitAutodescribing
 		Wonk string
 	}
 	err := New(&Woop{Wonk: "Bonk"})
@@ -40,13 +40,13 @@ func TestAutodescribeSimple(t *testing.T) {
 
 func TestAutodescribePlusCause(t *testing.T) {
 	type Woop struct {
-		AutodescribingError
-		CausableError
+		TraitAutodescribing
+		TraitCausable
 		Wonk string
 	}
 	err := New(&Woop{
 		Wonk:          "Bonk",
-		CausableError: CausableError{fmt.Errorf("lecause")},
+		TraitCausable: TraitCausable{fmt.Errorf("lecause")},
 	})
 	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
 	expect += "\t" + `Caused by: lecause` + "\n"
@@ -59,24 +59,24 @@ func TestAutodescribePlusCause(t *testing.T) {
 
 func TestAutodescribePlusTraceableCause(t *testing.T) {
 	type Woop struct {
-		AutodescribingError
-		CausableError
+		TraitAutodescribing
+		TraitCausable
 		Wonk string
 	}
 	type Boop struct {
-		TraceableError
-		AutodescribingError
+		TraitTraceable
+		TraitAutodescribing
 	}
 	err := New(&Woop{
 		Wonk: "Bonk",
-		CausableError: CausableError{
+		TraitCausable: TraitCausable{
 			New(&Boop{}),
 		},
 	})
 	expect := `Error[meep.Woop]: Wonk="Bonk";` + "\n"
 	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
 	expect += "\t\t" + `Stack trace:` + "\n"
-	expect += "\t\t\t" + `·> /autodescriber_test.go:73: meep.TestAutodescribePlusTraceableCause` + "\n"
+	expect += "\t\t\t" + `·> /trait_autodescriber_test.go:73: meep.TestAutodescribePlusTraceableCause` + "\n"
 
 	// Cleanup is fun...
 	actual := err.Error()
@@ -103,20 +103,20 @@ func TestAutodescribePlusTraceableCause(t *testing.T) {
 
 func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
 	type Woop struct {
-		AutodescribingError
-		CausableError
+		TraitAutodescribing
+		TraitCausable
 		Wonk string
 	}
 	type Boop struct {
-		AutodescribingError
-		CausableError
-		TraceableError
+		TraitAutodescribing
+		TraitCausable
+		TraitTraceable
 	}
 	err := New(&Woop{
 		Wonk: "Bonk",
-		CausableError: CausableError{
+		TraitCausable: TraitCausable{
 			New(&Boop{
-				CausableError: CausableError{
+				TraitCausable: TraitCausable{
 					New(&Boop{}),
 				},
 			}),
@@ -126,11 +126,11 @@ func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
 	expect += "\t" + `Caused by: Error[meep.Boop]:` + "\n"
 	expect += "\t\t" + `Caused by: Error[meep.Boop]:` + "\n"
 	expect += "\t\t\t" + `Stack trace:` + "\n"
-	expect += "\t\t\t\t" + `·> /autodescriber_test.go:120: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
+	expect += "\t\t\t\t" + `·> /trait_autodescriber_test.go:120: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
 	// variable: // expect += "\t\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
 	// variable: // expect += "\t\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
 	expect += "\t\t" + `Stack trace:` + "\n"
-	expect += "\t\t\t" + `·> /autodescriber_test.go:122: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
+	expect += "\t\t\t" + `·> /trait_autodescriber_test.go:122: meep.TestAutodescribePlusTraceableCauseDoubleTrouble` + "\n"
 	// variable: // expect += "\t\t\t" + `·> /usr/local/go/src/testing/testing.go:447: testing.tRunner` + "\n"
 	// variable: // expect += "\t\t\t" + `·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit` + "\n"
 
@@ -153,7 +153,7 @@ func TestAutodescribePlusTraceableCauseDoubleTrouble(t *testing.T) {
 
 func TestAutodescribeManyFields(t *testing.T) {
 	type ErrBananaPancakes struct {
-		AutodescribingError
+		TraitAutodescribing
 		Alpha string
 		Beta  int
 		Gamma interface{}
@@ -174,7 +174,7 @@ func TestAutodescribeManyFields(t *testing.T) {
 
 func TestIndirectEmbed(t *testing.T) {
 	type ErrBananaPancakes struct {
-		Meep
+		AllTraits
 		Alpha string
 		Beta  int
 	}
@@ -185,7 +185,7 @@ func TestIndirectEmbed(t *testing.T) {
 
 	expect := `Error[meep.ErrBananaPancakes]: Alpha="fwee";Beta=14;` + "\n"
 	expect += "\t" + `Stack trace:` + "\n"
-	expect += "\t\t" + `·> /autodescriber_test.go:184: meep.TestIndirectEmbed` + "\n"
+	expect += "\t\t" + `·> /trait_autodescriber_test.go:184: meep.TestIndirectEmbed` + "\n"
 	expect += "\t" + `Caused by: a cause` + "\n"
 
 	// Cleanup is fun...

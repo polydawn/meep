@@ -9,7 +9,7 @@ import (
 func TestCausableOpts(t *testing.T) {
 	type Woop struct {
 		error
-		meep.CausableError
+		meep.TraitCausable
 		Wonk string
 	}
 	err := meep.New(
@@ -19,7 +19,7 @@ func TestCausableOpts(t *testing.T) {
 	if err.(*Woop).Wonk != "Bonk" {
 		t.Errorf("Bonk somehow became %q", err.(*Woop).Wonk)
 	}
-	e2 := err.(*Woop).CausableError.Cause
+	e2 := err.(*Woop).TraitCausable.Cause
 	if e2 == nil {
 		t.Errorf("Cause was not initialized")
 	}

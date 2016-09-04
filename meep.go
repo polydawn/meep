@@ -1,17 +1,17 @@
 package meep
 
 func New(err error, opts ...Opts) error {
-	// for `AutodescribingError`:
+	// for `TraitAutodescribing`:
 	if m, ok := err.(meepAutodescriber); ok {
 		m.isMeepAutodescriber().self = err
 	}
 
-	// for `TraceableError`:
+	// for `TraitTraceable`:
 	if m, ok := err.(meepTraceable); ok {
 		m.isMeepTraceable().Stack = *captureStack()
 	}
 
-	// for `CausableError`:
+	// for `TraitCausable`:
 	if m, ok := err.(meepCausable); ok {
 		for _, o := range opts {
 			if o.cause != nil {
@@ -20,9 +20,6 @@ func New(err error, opts ...Opts) error {
 			}
 		}
 	}
-
-	// for `GroupingError`:
-	//  (nothing really; it's mostly a hint to `AutodescribingError`.)
 
 	return err
 }

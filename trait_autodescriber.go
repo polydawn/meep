@@ -7,14 +7,19 @@ import (
 	"reflect"
 )
 
+// Errors that generate their messages automatically from their fields!
+type TraitAutodescribing struct {
+	self interface{}
+}
+
 type meepAutodescriber interface {
-	isMeepAutodescriber() *AutodescribingError
+	isMeepAutodescriber() *TraitAutodescribing
 }
 
 // note that this function applies if you have a type which embeds this one sans-*, but you have a ref to that type.
-func (m *AutodescribingError) isMeepAutodescriber() *AutodescribingError { return m }
+func (m *TraitAutodescribing) isMeepAutodescriber() *TraitAutodescribing { return m }
 
-func (m *AutodescribingError) ErrorMessage() string {
+func (m *TraitAutodescribing) ErrorMessage() string {
 	// Check for initialization.
 	// Can't do much of use if we didn't get initialized with a selfie reference.
 	if m.self == nil {
@@ -79,22 +84,22 @@ func describeFields(subject reflect.Value, buf *bytes.Buffer) {
 
 func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, io.Writer)) {
 	switch typ {
-	case reflect.TypeOf(Meep{}):
+	case reflect.TypeOf(AllTraits{}):
 		return true, func(f reflect.Value, buf io.Writer) {
 			describeFields(f, buf.(*bytes.Buffer))
 		}
-	case reflect.TypeOf(TraceableError{}):
+	case reflect.TypeOf(TraitTraceable{}):
 		return true, func(f reflect.Value, buf io.Writer) {
 			buf = indenter(buf)
 			buf.Write([]byte("Stack trace:\n"))
 			buf = indenter(buf)
 			//buf.(*rediscipliner).prefix = []byte{} // stacks already tab themselves in once
-			m := reflect.Indirect(f).Interface().(TraceableError)
+			m := reflect.Indirect(f).Interface().(TraitTraceable)
 			m.WriteStack(buf)
 		}
-	case reflect.TypeOf(CausableError{}):
+	case reflect.TypeOf(TraitCausable{}):
 		return true, func(f reflect.Value, buf io.Writer) {
-			m := reflect.Indirect(f).Interface().(CausableError)
+			m := reflect.Indirect(f).Interface().(TraitCausable)
 			if m.Cause == nil {
 				return
 			}
@@ -107,22 +112,7 @@ func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, i
 				buf.Write(br)
 			}
 		}
-	case reflect.TypeOf(GroupingError{}):
-		return true, func(f reflect.Value, buf io.Writer) {
-			m := reflect.Indirect(f).Interface().(GroupingError)
-			if m.Specifically == nil {
-				return
-			}
-			buf = indenter(buf)
-			buf.Write([]byte("Specifically: "))
-			// since we're now in multiline mode, we want to wrap up with a br.
-			msg := []byte(m.Specifically.Error())
-			buf.Write(msg)
-			if len(msg) == 0 || msg[len(msg)-1] != '\n' {
-				buf.Write(br)
-			}
-		}
-	case reflect.TypeOf(AutodescribingError{}):
+	case reflect.TypeOf(TraitAutodescribing{}):
 		return true, nil
 	default:
 		return false, nil
@@ -135,6 +125,6 @@ func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, i
 	If you're using other mixins, you may want to override this again;
 	if you're just using `Autodescriber`, it'll do fine.
 */
-func (m *AutodescribingError) Error() string {
+func (m *TraitAutodescribing) Error() string {
 	return m.ErrorMessage()
 }

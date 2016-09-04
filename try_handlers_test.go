@@ -8,9 +8,9 @@ import (
 )
 
 func TestTryHandlerMapto(t *testing.T) {
-	type Wonk struct{ meep.Meep }
-	type Bonk struct{ meep.Meep }
-	type Tonk struct{ meep.Meep }
+	type Wonk struct{ meep.AllTraits }
+	type Bonk struct{ meep.AllTraits }
+	type Tonk struct{ meep.AllTraits }
 
 	var result error
 	plan := meep.TryPlan{}.
