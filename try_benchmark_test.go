@@ -1,7 +1,6 @@
 package meep
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
@@ -10,8 +9,7 @@ func BenchmarkTryV1(b *testing.B) {
 	var err error
 	var val error
 	for i := 0; i < b.N; i++ {
-		//	err = &ErrUntypedPanic{}
-		err = fmt.Errorf("watt")
+		err = &ErrUntypedPanic{}
 		Try(
 			func() {
 				panic(err)
@@ -28,8 +26,7 @@ func BenchmarkTryV1(b *testing.B) {
 func BenchmarkTryPlan2Bare(b *testing.B) {
 	var err error
 	for i := 0; i < b.N; i++ {
-		//	err = &ErrUntypedPanic{}
-		err = fmt.Errorf("watt")
+		err = &ErrUntypedPanic{}
 		TryPlan2{
 			{ByType: &ErrUntypedPanic{},
 				Handler: TryHandlerDiscard},
@@ -46,8 +43,7 @@ func BenchmarkTryPlan2Bare(b *testing.B) {
 func BenchmarkTryPlan2Panicky(b *testing.B) {
 	var err error
 	for i := 0; i < b.N; i++ {
-		//	err = &ErrUntypedPanic{}
-		err = fmt.Errorf("watt")
+		err = &ErrUntypedPanic{}
 		Try2(
 			func() {
 				panic(err)
@@ -69,8 +65,7 @@ func BenchmarkTryPlan2Panicky(b *testing.B) {
 func BenchmarkTypeswitch(b *testing.B) {
 	var err error
 	for i := 0; i < b.N; i++ {
-		//	err = &ErrUntypedPanic{}
-		err = fmt.Errorf("watt")
+		err = &ErrUntypedPanic{}
 		switch err.(type) {
 		case *os.PathError:
 			TryHandlerDiscard(err)
