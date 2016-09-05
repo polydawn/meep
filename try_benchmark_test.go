@@ -5,29 +5,11 @@ import (
 	"testing"
 )
 
-func BenchmarkTryV1(b *testing.B) {
-	var err error
-	var val error
-	for i := 0; i < b.N; i++ {
-		err = &ErrUntypedPanic{}
-		Try(
-			func() {
-				panic(err)
-			},
-			TryPlan{}.Catch(&ErrUntypedPanic{}, TryHandlerDiscard).
-				CatchVal(val, TryHandlerDiscard).
-				CatchPredicate(func(e error) bool { return false },
-				func(e error) { panic("wow") }).
-				CatchAll(TryHandlerDiscard),
-		)
-	}
-}
-
-func BenchmarkTryPlan2Bare(b *testing.B) {
+func BenchmarkTryPlanBare(b *testing.B) {
 	var err error
 	for i := 0; i < b.N; i++ {
 		err = &ErrUntypedPanic{}
-		TryPlan2{
+		TryPlan{
 			{ByType: &ErrUntypedPanic{},
 				Handler: TryHandlerDiscard},
 			{ByVal: 13,
@@ -40,15 +22,15 @@ func BenchmarkTryPlan2Bare(b *testing.B) {
 	}
 }
 
-func BenchmarkTryPlan2Panicky(b *testing.B) {
+func BenchmarkTryPlanPanicky(b *testing.B) {
 	var err error
 	for i := 0; i < b.N; i++ {
 		err = &ErrUntypedPanic{}
-		Try2(
+		Try(
 			func() {
 				panic(err)
 			},
-			TryPlan2{
+			TryPlan{
 				{ByType: &ErrUntypedPanic{},
 					Handler: TryHandlerDiscard},
 				{ByVal: 13,
