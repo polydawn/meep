@@ -91,3 +91,25 @@ func BenchmarkTypeswitchNofmterr(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkStackinitialization(b *testing.B) {
+	var err error
+	for i := 0; i < b.N; i++ {
+		err = New(&ErrUntypedPanic{})
+	}
+	_ = err
+}
+
+func BenchmarkBaseline(b *testing.B) {
+	var err error
+	for i := 0; i < b.N; i++ {
+		func() {
+			defer func() {
+				recover()
+			}()
+			func() {
+				err = &ErrUntypedPanic{}
+			}()
+		}()
+	}
+}
