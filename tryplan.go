@@ -4,71 +4,85 @@ import (
 	"reflect"
 )
 
+type TryHandler func(error)
+
 /*
-	TryPlan is an error handling configuration.
+	TryPlan is a declarative error handling plan.
 
 	You can dispatch errors according to several patterns, since both the
 	golang stdlib and many libraries have seen fit to use a variety of
 	different patterns, and they can't easily be distinguished by type alone
 	(e.g. should we typeswitch, or do we need to do actual val/ptr compare):
 
-		Catch(kind error, handler)
-		CatchVal(ptrOrVal error, handler)
-		CatchPredicate(func(error) bool, handler) // use only as a last resort, please
-		CatchExotic(handler) // anyone who panics as a non error goes here.  nobody should do that, frankly.
-		CatchAll(handler) // called as a last resort
+		TryRoute{ByType: exampleVal error,       Handler: fn}
+		TryRoute{ByVal:  ptrOrVal error,         Handler: fn}
+		TryRoute{ByFunc: func(error) bool,       Handler: fn}
+		TryRoute{CatchAny: true,                 Handler: fn}
 
-	Errors are checked against handlers in the order they're added.
+	The `By*` fields are used to check whether an error should be handled by
+	that route; then the handler is called when a route matches.
+	Errors are checked against routes in the order they're listed in your TryPlan.
 
-	If an error passes all the way through a TryPlan without matching any of
-	the configured handlers, it is raised as a panic.
+	Use `ByType` as much as you can.  Meep's typed error helpers should make
+	typed errors your default coding style.
 
-	If you want to catch *everything*, use the CatchAll handler.
-	If using CatchAll, be sure to add it last -- it's really just syntactic
-	sugar for an always-true predicate.
+	Use `ByVal` where you have to; `io.EOF` is one you must check by value.
+
+	Use `ByFunc` as a last resort -- but if you really have to do something
+	complicated, go for it.
+
+	If you want to catch *everything*, set the CatchAny flag.
+	If using CatchAny, be sure to add it last -- since it matches any error,
+	routes after it will never be called.
 */
-type TryPlan struct {
-	matchers []tryMatcher
+type TryPlan []TryRoute
+
+func (tp TryPlan) Handle(e error) error {
+	for _, tr := range tp {
+		if tr.Matches(e) {
+			tr.Handler(e)
+			return nil
+		}
+	}
+	return e
 }
 
-type TryHandler func(error)
-
-func (p TryPlan) Catch(typeExample error, handler TryHandler) TryPlan {
-	p.matchers = append(p.matchers, tryMatcher{
-		predicate: tryPredicateType{reflect.TypeOf(typeExample)}.Q,
-		handler:   handler,
-	})
-	return p
+func (tp TryPlan) MustHandle(e error) {
+	e = tp.Handle(e)
+	if e != nil {
+		panic(e)
+	}
 }
 
-func (p TryPlan) CatchVal(ptrOrVal error, handler TryHandler) TryPlan {
-	p.matchers = append(p.matchers, tryMatcher{
-		predicate: tryPredicateVal{ptrOrVal}.Q,
-		handler:   handler,
-	})
-	return p
+/*
+	A single route, used to compose a TryPlan.
+
+	Typical usage is to set a Handler function, and then treat the other
+	fields as if it's a 'union' (that is, only set one of them), like this:
+
+		TryRoute{ByVal: io.EOF, Handler: func(e error) { fmt.Println(e) }}
+*/
+type TryRoute struct {
+	ByType   interface{}
+	ByVal    interface{}
+	ByFunc   func(error) bool
+	CatchAny bool
+
+	Handler TryHandler
 }
 
-func (p TryPlan) CatchPredicate(predicate func(error) bool, handler TryHandler) TryPlan {
-	p.matchers = append(p.matchers, tryMatcher{
-		predicate: predicate,
-		handler:   handler,
-	})
-	return p
-}
-
-func (p TryPlan) CatchExotic(handler TryHandler) TryPlan {
-	p.matchers = append(p.matchers, tryMatcher{
-		predicate: tryPredicateType{typeof_ErrUntypedPanic}.Q,
-		handler:   handler,
-	})
-	return p
-}
-
-func (p TryPlan) CatchAll(handler TryHandler) TryPlan {
-	p.matchers = append(p.matchers, tryMatcher{
-		predicate: trueThunk,
-		handler:   handler,
-	})
-	return p
+func (tr TryRoute) Matches(e error) bool {
+	if tr.ByType != nil {
+		return reflect.TypeOf(e) == reflect.TypeOf(tr.ByType)
+	}
+	if tr.ByVal != nil {
+		return e == tr.ByVal
+	}
+	if tr.ByFunc != nil {
+		return tr.ByFunc(e)
+	}
+	if tr.CatchAny {
+		return true
+	}
+	return false
 }

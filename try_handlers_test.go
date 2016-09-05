@@ -13,16 +13,17 @@ func TestTryHandlerMapto(t *testing.T) {
 	type Tonk struct{ meep.AllTraits }
 
 	var result error
-	plan := meep.TryPlan{}.
-		Catch(&Wonk{}, meep.TryHandlerMapto(&Bonk{})).
-		Catch(&Bonk{}, meep.TryHandlerMapto(&Tonk{})).
-		Catch(&Tonk{}, func(e error) {
-		actual := e.Error()
-		actual = strings.Replace(actual, "\t", "\\t\t", -1)
-		actual = strings.Replace(actual, "\n", "\\n\n", -1)
-		t.Logf("a fantastic cause tree\n>>>\n%s\n<<<\n", actual)
-		result = e
-	})
+	plan := meep.TryPlan{
+		{ByType: &Wonk{}, Handler: meep.TryHandlerMapto(&Bonk{})},
+		{ByType: &Bonk{}, Handler: meep.TryHandlerMapto(&Tonk{})},
+		{ByType: &Tonk{}, Handler: func(e error) {
+			actual := e.Error()
+			actual = strings.Replace(actual, "\t", "\\t\t", -1)
+			actual = strings.Replace(actual, "\n", "\\n\n", -1)
+			t.Logf("a fantastic cause tree\n>>>\n%s\n<<<\n", actual)
+			result = e
+		}},
+	}
 
 	meep.Try(func() {
 		meep.Try(func() {

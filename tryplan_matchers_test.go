@@ -20,8 +20,8 @@ func TestTryPredicateType(t *testing.T) {
 		{io.EOF, fmt.Errorf("Cthulhu"), true}, // WOMP!  Though `io.EOF` is meant to be used as a value, it's also an errors.Stringer instance -- watch out!
 	}
 	for _, tr := range tt {
-		res := match(tr.err, TryPlan{}.Catch(tr.typeExample, TryHandlerDiscard)) != nil
-		if res != tr.shouldMatch {
+		handled := TryPlan{{ByType: tr.typeExample, Handler: TryHandlerDiscard}}.Handle(tr.err) == nil
+		if handled != tr.shouldMatch {
 			t.Errorf("Error %q %s match type example %q", tr.err, negs(tr.shouldMatch), tr.typeExample)
 		}
 	}
@@ -43,8 +43,8 @@ func TestTryPredicateVal(t *testing.T) {
 		{io.EOF, io.EOF, true},
 	}
 	for _, tr := range tt {
-		res := match(tr.err, TryPlan{}.CatchVal(tr.typeExample, TryHandlerDiscard)) != nil
-		if res != tr.shouldMatch {
+		handled := TryPlan{{ByVal: tr.typeExample, Handler: TryHandlerDiscard}}.Handle(tr.err) == nil
+		if handled != tr.shouldMatch {
 			t.Errorf("Error %q (%p) %s match value %q (%p)", tr.err, tr.err, negs(tr.shouldMatch), tr.typeExample, tr.typeExample)
 		}
 	}
