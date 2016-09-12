@@ -1,5 +1,9 @@
 package meep
 
+func Meep(err error, opts ...Opts) error {
+	return New(err, opts...)
+}
+
 func New(err error, opts ...Opts) error {
 	// for `TraitAutodescribing`:
 	if m, ok := err.(meepAutodescriber); ok {
