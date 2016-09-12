@@ -7,10 +7,10 @@ import (
 )
 
 type Stack struct {
-	Frames []Frame
+	Frames []StackFrame
 }
 
-type Frame uintptr
+type StackFrame uintptr
 
 /*
 	Captures a trace of the current stack.
@@ -44,9 +44,9 @@ func captureStack() *Stack {
 	//  2: {one of this pkg's public functions}
 	//  3: [start_here]
 	n := runtime.Callers(3, pcs[:])
-	frames := make([]Frame, n)
+	frames := make([]StackFrame, n)
 	for i := 0; i < n; i++ {
-		frames[i] = Frame(pcs[i])
+		frames[i] = StackFrame(pcs[i])
 	}
 	return &Stack{
 		Frames: frames,
@@ -61,7 +61,7 @@ func captureStack() *Stack {
 	your IDE, if it supports that convention, may let you click-to-jump);
 	following the source location info, the function name is suffixed.
 */
-func (pc Frame) String() string {
+func (pc StackFrame) String() string {
 	file, line, fn := pc.Where()
 	return fmt.Sprintf(
 		"%s:%d: %s",
@@ -71,7 +71,7 @@ func (pc Frame) String() string {
 	)
 }
 
-func (pc Frame) Where() (file string, line int, fn string) {
+func (pc StackFrame) Where() (file string, line int, fn string) {
 	if pc == 0 {
 		return "unknown", 0, "unknown"
 	}
