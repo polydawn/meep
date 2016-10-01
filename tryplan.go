@@ -37,6 +37,16 @@ type TryHandler func(error)
 */
 type TryPlan []TryRoute
 
+/*
+	Checks the TryPlan for handlers that match the error, and invokes the
+	first one that does.
+
+	The return value is nil if we found and called a handler, or the
+	original error if there was no matching handler.
+
+	If the error parameter was nil, no handler will be called, and the
+	result will always be nil.
+*/
 func (tp TryPlan) Handle(e error) error {
 	if e == nil {
 		return nil
@@ -50,6 +60,9 @@ func (tp TryPlan) Handle(e error) error {
 	return e
 }
 
+/*
+	Like `Handle(e)`, but will panic if the (non-nil) error is not handled.
+*/
 func (tp TryPlan) MustHandle(e error) {
 	e = tp.Handle(e)
 	if e != nil {
