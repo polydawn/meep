@@ -1,12 +1,15 @@
 package meep
 
-func Try(fn func(), plan TryPlan) {
+func RecoverPanics(fn func()) (e error) {
 	defer func() {
-		if err := coerce(recover()); err != nil {
-			plan.MustHandle(err)
-		}
+		e = coerce(recover())
 	}()
 	fn()
+	return
+}
+
+func Try(fn func(), plan TryPlan) {
+	plan.MustHandle(RecoverPanics(fn))
 }
 
 func coerce(rcvrd interface{}) error {
