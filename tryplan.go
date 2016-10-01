@@ -38,6 +38,9 @@ type TryHandler func(error)
 type TryPlan []TryRoute
 
 func (tp TryPlan) Handle(e error) error {
+	if e == nil {
+		return nil
+	}
 	for _, tr := range tp {
 		if tr.Matches(e) {
 			tr.Handler(e)
