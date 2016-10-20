@@ -13,6 +13,7 @@ type ErrNotYetImplemented struct {
 }
 
 type ErrProgrammer struct {
+	Msg string
 	TraitAutodescribing
 	TraitTraceable
 	TraitCausable
