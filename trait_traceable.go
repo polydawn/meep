@@ -16,6 +16,10 @@ type meepTraceable interface {
 
 func (m *TraitTraceable) isMeepTraceable() *TraitTraceable { return m }
 
+func (m TraitTraceable) IsStackSet() bool {
+	return len(m.Stack.Frames) > 0
+}
+
 /*
 	Return the stack of the error formatted as a human readable string:
 	one frame per line.  Each line lists the source file, line number, and
@@ -30,7 +34,8 @@ func (m TraitTraceable) StackString() string {
 // Same job as StackString; use StackString for convenience, use this for performance.
 func (m TraitTraceable) WriteStack(w io.Writer) {
 	if len(m.Stack.Frames) == 0 {
-		panic("meep:uninitialized")
+		w.Write([]byte("stack info not tracked"))
+		return
 	}
 	for _, fr := range m.Stack.Frames {
 		//w.Write(tab)
