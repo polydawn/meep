@@ -49,10 +49,32 @@ func flattenOpts(opts []Opts) Opts {
 
 }
 
+/*
+	Use `Cause` to tell `Meep()` that it should attach another error as a
+	cause to the error it's initializating.
+
+	Usage:
+
+		meep.Meep(
+			&ErrSomethingCausable{},
+			meep.Cause(fmt.Errorf("the root cause")),
+		)
+*/
 func Cause(x error) Opts {
 	return Opts{cause: New(x)}
 }
 
+/*
+	Use `NoStack` to tell `Meep()` that it should skip gathering a stack trace
+	for this error, even if it has `TraitTraceable`.
+
+	Usage:
+
+		meep.Meep(
+			&ErrUsuallyHasAStacktrace{},
+			meep.NoStack(), // skip stacks this time.
+		)
+*/
 func NoStack() Opts {
 	return Opts{nostack: true}
 }
