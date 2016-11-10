@@ -34,7 +34,7 @@ func (m TraitTraceable) StackString() string {
 // Same job as StackString; use StackString for convenience, use this for performance.
 func (m TraitTraceable) WriteStack(w io.Writer) {
 	if len(m.Stack.Frames) == 0 {
-		w.Write([]byte("meep:uninitialized"))
+		w.Write([]byte("stack info not tracked"))
 		return
 	}
 	for _, fr := range m.Stack.Frames {
