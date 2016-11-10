@@ -90,11 +90,13 @@ func customDescribe(typ reflect.Type) (consumed bool, desc func(reflect.Value, i
 		}
 	case reflect.TypeOf(TraitTraceable{}):
 		return true, func(f reflect.Value, buf io.Writer) {
+			m := reflect.Indirect(f).Interface().(TraitTraceable)
+			if !m.IsStackSet() {
+				return
+			}
 			buf = indenter(buf)
 			buf.Write([]byte("Stack trace:\n"))
 			buf = indenter(buf)
-			//buf.(*rediscipliner).prefix = []byte{} // stacks already tab themselves in once
-			m := reflect.Indirect(f).Interface().(TraitTraceable)
 			m.WriteStack(buf)
 		}
 	case reflect.TypeOf(TraitCausable{}):
