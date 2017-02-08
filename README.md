@@ -4,8 +4,8 @@ More Expressive Error Patterns
 consider the following!
 
 ```text
-Error[Woop]: Wonk="Bonk";
-    Caused by: Error[Boop]:
+Error[ErrMyApplicationStuck]: Subsystem="blamethis"; TaskNum=42;
+    Caused by: Error[ErrNoSpoons]:
         Stack trace:
             ·> /build/path/polydawn/meep/autodescriber_test.go:71: meep.TestAutodescribePlusTraceableCause
             ·> /usr/local/go/src/testing/testing.go:447: testing.tRunner
@@ -17,12 +17,13 @@ That's the output of meep errors...
 ... where the errors were types:
 
 ```golang
-type Woop struct {
-    meep.TraitAutodescribing
+type ErrMyApplicationStuck struct {
     meep.CauseableError
-    Wonk string
+    meep.TraitAutodescribing
+    Subsystem string
+	TaskNum   int
 }
-type Boop struct {
+type ErrNoSpoons struct {
     meep.TraitTraceable
     meep.TraitAutodescribing
 }
@@ -32,8 +33,8 @@ type Boop struct {
 
 ```golang
 err := meep.New(
-	&Woop{Wonk:"Bonk"},
-	meep.Cause(&Boop{}),
+	&ErrMyApplicationStuck{Subsystem:"blamethis", TaskNum: 42},
+	meep.Cause(&ErrNoSpoons{}),
 )
 ```
 
