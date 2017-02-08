@@ -89,3 +89,19 @@ Availability
 ------------
 
 `meep` works with any recent version of Go, going as far back as go1.2.
+
+
+Performance
+-----------
+
+Quite good.
+
+The declarative `TryPlan` structures, as shown in the example, play so nicely
+with the Go compiler's escape analysis that there's effectively zero overhead to the declaration.
+When evaluating a `TryPlan` with a nil error, the first branch is to return early,
+so there's also effectively zero overhead in the happy/non-error path.
+
+Capturing stack traces *is* an expensive operation.
+(This is true no matter what tools or libraries you use.)
+It is not recommended to mix in `TraitTraceable` in errors you return frequently or use for flow control.
+Use it when you need it -- that's why it's optional.
