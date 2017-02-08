@@ -75,6 +75,12 @@ meep.Try(func() {
 })
 ```
 
+There are three different ways to invoke a `TryPlan`:
+
+- `meep.Try` (as shown above), which handles panics from the function
+- [TryPlan.Handle](https://godoc.org/github.com/polydawn/meep#TryPlan.Handle), which takes the error as an argument (for use with the golang convention of returning errors)
+- and [TryPlan.MustHandle](https://godoc.org/github.com/polydawn/meep#TryPlan.MustHandle), which is the same as `Handle` but will panic if there is an error and it is not explicitly handled.
+
 `TryPlan` supports handling by **type** (which is what you'll use 99.9% of the time, since your errors with meep *are* typed)
 as well as by **value**, so it works well with legacy code and existing interfaces.
 You can also specify an arbitrary `func (error) (matches bool)` predicate for flexibility,
