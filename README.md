@@ -18,7 +18,7 @@ That's the output of meep errors...
 
 ```golang
 type ErrMyApplicationStuck struct {
-    meep.CauseableError
+    meep.TraitCausable
     meep.TraitAutodescribing
     Subsystem string
 	TaskNum   int
