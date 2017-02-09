@@ -133,6 +133,30 @@ come up with some sort of a solution for stack traces, and just generally end up
 With `meep`, it's all the benefits of error types: easier, fewer SLOC, and more featureful.
 
 
+Capturing and displaying multiple stacks
+----------------------------------------
+
+Each meep error can capture a stack.
+This means you can have multiple stack traces reported from a single error,
+if it has causes that also report stack traces:
+
+```
+Error[meep.Woop]: Wonk="Bonk";
+	Caused by: Error[meep.Boop]:
+		Caused by: Error[meep.Boop]:
+			Stack trace:
+				·> /build/path/polydawn/meep/trait_autodescriber_test.go:120: meep.TestAutodescribePlusTraceableCauseDoubleTrouble
+				·> /usr/local/go/src/testing/testing.go:610: testing.tRunner
+				·> /usr/local/go/src/runtime/asm_amd64.s:2086: runtime.goexit
+		Stack trace:
+			·> /build/path/polydawn/meep/trait_autodescriber_test.go:122: meep.TestAutodescribePlusTraceableCauseDoubleTrouble
+			·> /usr/local/go/src/testing/testing.go:610: testing.tRunner
+			·> /usr/local/go/src/runtime/asm_amd64.s:2086: runtime.goexit
+```
+
+As you can see, the formatting will be consistent, and each stack trace's indentation associates it with the error.
+
+
 "try"-like handling and dispatch blocks
 ---------------------------------------
 

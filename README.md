@@ -57,6 +57,7 @@ read more
 ---------
 
 - [A bigger example](READMORE.md#a-bigger-example)
+- [Capturing and displaying multiple stacks](READMORE.md#capturing-and-displaying-multiple-stacks)
 - ["try"-like handling and dispatch blocks](READMORE.md#try-like-handling-and-dispatch-blocks)
 - [Availablity](READMORE.md#availability)
 - [Performance](READMORE.md#performance)
