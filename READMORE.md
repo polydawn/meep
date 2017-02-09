@@ -36,6 +36,11 @@ Note that you can specify `TryPlan` blocks separately from where you use them,
 so you can declare your error handling patterns in one place and use them in *several* places.
 You can also aggregate `TryPlan`s with plain ol' `append()`.
 
+Can you still use simple built-in `switch err.(type) { ...` constructs for handling?
+Yes, absolutely!  Type switches work perfectly well with meep errors.
+The allure of the TryPlan is the mixture of handling type and value errors in the same block of logic.
+Go with what works for you.
+
 
 Availability
 ------------
