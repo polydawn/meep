@@ -30,12 +30,12 @@ So when decoding this protocol, there's a couple of things that could go wrong:
 
 ```golang
 type ErrBadProtocolHandshake struct {
-    meep.TraitCausable
-    meep.TraitAutodescribing
+	meep.TraitCausable
+	meep.TraitAutodescribing
 }
 type ErrMalformedMessage struct {
-    meep.TraitCausable
-    meep.TraitAutodescribing
+	meep.TraitCausable
+	meep.TraitAutodescribing
 	ExpectedType string
 }
 ```
@@ -166,16 +166,16 @@ Use the `TryPlan` structure to declare error handling clearly.
 
 ```
 meep.Try(func() {
-    panic(meep.New(&meep.AllTraits{}))
+	panic(meep.New(&meep.AllTraits{}))
 }, meep.TryPlan{
-    {ByType: &meep.ErrInvalidParam{},
-        Handler: meep.TryHandlerMapto(&meep.ErrProgrammer{})},
-    {ByVal: io.EOF,
-        Handler: meep.TryHandlerDiscard},
-    {CatchAny: true,
-        Handler: func(error) {
-            fmt.Println("caught wildcard")
-        }},
+	{ByType: &meep.ErrInvalidParam{},
+		Handler: meep.TryHandlerMapto(&meep.ErrProgrammer{})},
+	{ByVal: io.EOF,
+		Handler: meep.TryHandlerDiscard},
+	{CatchAny: true,
+		Handler: func(error) {
+			fmt.Println("caught wildcard")
+		}},
 })
 ```
 

@@ -5,11 +5,11 @@ consider the following!
 
 ```text
 Error[ErrMyApplicationStuck]: Subsystem="blamethis"; TaskNum=42;
-    Caused by: Error[ErrNoSpoons]:
-        Stack trace:
-            ·> /build/path/polydawn/meep/autodescriber_test.go:71: meep.TestAutodescribePlusTraceableCause
-            ·> /usr/local/go/src/testing/testing.go:447: testing.tRunner
-            ·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit
+	Caused by: Error[ErrNoSpoons]:
+		Stack trace:
+			·> /build/path/polydawn/meep/autodescriber_test.go:71: meep.TestAutodescribePlusTraceableCause
+			·> /usr/local/go/src/testing/testing.go:447: testing.tRunner
+			·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit
 ```
 
 That's the output of meep errors...
@@ -18,14 +18,14 @@ That's the output of meep errors...
 
 ```golang
 type ErrMyApplicationStuck struct {
-    meep.TraitCausable
-    meep.TraitAutodescribing
-    Subsystem string
+	meep.TraitCausable
+	meep.TraitAutodescribing
+	Subsystem string
 	TaskNum   int
 }
 type ErrNoSpoons struct {
-    meep.TraitTraceable
-    meep.TraitAutodescribing
+	meep.TraitTraceable
+	meep.TraitAutodescribing
 }
 ```
 
