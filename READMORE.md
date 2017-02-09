@@ -1,3 +1,137 @@
+A bigger example
+----------------
+
+Suppose you have an application which speaks a json protocol.
+The basic errors returned by the json.Marshal/Unmarshal functions are great;
+but in the context of your larger application, don't tell you things like
+"what kind of message was this that caused an error?" -- you need to attach your
+own information about that.  So, custom error types to the rescue!
+
+```golang
+// Our message type.  Has polymorphic content.
+type Envelope struct {
+	MsgType  string
+	Msg      interface{}
+}
+type AppleMsg struct{ Opacity int }
+type PearMsg struct{ /*...*/ }
+```
+
+We have a couple different message types, and one "envelope" type at the top to contain
+our protocol header and some hint for what the body message is.
+(This kind of polymorphism for json decoding probably looks familiar already; if not,
+we're loosely riffing off [eagain's dynamic json tutorial](http://eagain.net/articles/go-dynamic-json/), which is a great document.)
+
+So when decoding this protocol, there's a couple of things that could go wrong:
+
+1. we could fail to parse the json at all;
+2. we could see a `MsgType` we don't understand;
+3. and we could fail while mapping the inner `Msg` into our structs.
+
+```golang
+type ErrBadProtocolHandshake struct {
+    meep.TraitCausable
+    meep.TraitAutodescribing
+}
+type ErrMalformedMessage struct {
+    meep.TraitCausable
+    meep.TraitAutodescribing
+	ExpectedType string
+}
+```
+
+Here we've declared two types of errors.
+We're going to lump those first three failure modes into `ErrBadProtocolHandshake`,
+and the fourth we'll call `ErrMalformedMessage`.
+
+Notice that `ErrMalformedMessage` has an additional field in it:
+when that error comes up, we'll be in a conditional branch
+depending on which kind of message body the envelope declared,
+so we'll want to attach that information.
+
+Now, let's parse!
+
+Our example message will be:
+
+```golang
+envelopeRaw := []byte(`{"MsgType":"apple", "Msg":{"Opacity":"stringy"}}`)
+```
+
+(You can see we're lining up for an error because strings aren't ints, here, on the inner message.)
+
+Our parse logic, complete with all error returns, looks like this:
+
+```golang
+func() (*Envelope, error) {
+	msgRaw := json.RawMessage{}
+	msgEnvelope := &Envelope{Msg: &msgRaw}
+	if err := json.Unmarshal(envelopeRaw, msgEnvelope); err != nil {
+		return nil, meep.New(
+			&ErrBadProtocolHandshake{},
+			meep.Cause(err),
+		)
+	}
+	var msg interface{}
+	switch msgEnvelope.MsgType {
+	case "apple":
+		msg = &AppleMsg{}
+	case "pear":
+		msg = &PearMsg{}
+	default:
+		return msgEnvelope, meep.New(
+			&ErrBadProtocolHandshake{},
+			meep.Cause(fmt.Errorf("unknown message type")),
+		)
+	}
+	if err := json.Unmarshal(msgRaw, msg); err != nil {
+		return msgEnvelope, meep.New(
+			&ErrMalformedMessage{ExpectedType: msgEnvelope.MsgType},
+			meep.Cause(err),
+		)
+	}
+	msgEnvelope.Msg = msg
+	return msgEnvelope, nil
+}
+```
+
+Now, when an error is returned, you can handle it with a type switch:
+
+```golang
+switch err.(type) {
+	case *ErrBadProtocolHandshake: /* ... */
+	case *ErrMalformedMessage: /* ... */
+}
+```
+
+And if we print it?
+
+```text
+Error[meep_test.ErrMalformedMessage]: ExpectedType="apple";
+	Caused by: json: cannot unmarshal string into Go value of type int
+```
+
+The error type is clearly displayed.
+Any additional fields (in this case, just "ExpectedType") are printed along with it.
+The cause (and recursively, if a meep error is the cause of another meep error) is printed on the next line, indented and clearly separated.
+
+Notice that we didn't opt-in to stack traces here -- none of our error types embedded `TraitTraceable`.
+In this example, forgoing stack traces seemed reasonable because our error types should be expressive enough;
+but you can add stack traces to any error by embedding that trait, and they'll be automatically pretty-printed.
+If you do opt-in to stacks by embedding that trait, they're formatted like this:
+
+```
+Error[ErrTypeName]:
+	Stack trace:
+		·> /build/path/polydawn/meep/trait_autodescriber_test.go:120: meep.TestAutodescribePlusTraceableCauseDoubleTrouble
+		·> /usr/local/go/src/testing/testing.go:610: testing.tRunner
+		·> /usr/local/go/src/runtime/asm_amd64.s:2086: runtime.goexit
+```
+
+Everything you did here, you could have done with error type declarations before `meep` came along.
+However, to get the same level of features, you would need to write custom stringer methods for each error type,
+come up with some sort of a solution for stack traces, and just generally end up with more than 2 or 3x the amount of code.
+With `meep`, it's all the benefits of error types: easier, fewer SLOC, and more featureful.
+
 
 "try"-like handling and dispatch blocks
 ---------------------------------------

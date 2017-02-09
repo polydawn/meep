@@ -56,6 +56,7 @@ Typed errors are pretty much universally acknowledged to beat the pants off `fmt
 read more
 ---------
 
+- [A bigger example](READMORE.md#a-bigger-example)
 - ["try"-like handling and dispatch blocks](READMORE.md#try-like-handling-and-dispatch-blocks)
 - [Availablity](READMORE.md#availability)
 - [Performance](READMORE.md#performance)
