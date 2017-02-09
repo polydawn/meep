@@ -4,12 +4,12 @@ More Expressive Error Patterns
 consider the following!
 
 ```text
-Error[Woop]: Wonk="Bonk";
-    Caused by: Error[Boop]:
-        Stack trace:
-            ·> /build/path/polydawn/meep/autodescriber_test.go:71: meep.TestAutodescribePlusTraceableCause
-            ·> /usr/local/go/src/testing/testing.go:447: testing.tRunner
-            ·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit
+Error[ErrMyApplicationStuck]: Subsystem="blamethis"; TaskNum=42;
+	Caused by: Error[ErrNoSpoons]:
+		Stack trace:
+			·> /build/path/polydawn/meep/autodescriber_test.go:71: meep.TestAutodescribePlusTraceableCause
+			·> /usr/local/go/src/testing/testing.go:447: testing.tRunner
+			·> /usr/local/go/src/runtime/asm_amd64.s:2232: runtime.goexit
 ```
 
 That's the output of meep errors...
@@ -17,14 +17,15 @@ That's the output of meep errors...
 ... where the errors were types:
 
 ```golang
-type Woop struct {
-    meep.TraitAutodescribing
-    meep.CauseableError
-    Wonk string
+type ErrMyApplicationStuck struct {
+	meep.TraitCausable
+	meep.TraitAutodescribing
+	Subsystem string
+	TaskNum   int
 }
-type Boop struct {
-    meep.TraitTraceable
-    meep.TraitAutodescribing
+type ErrNoSpoons struct {
+	meep.TraitTraceable
+	meep.TraitAutodescribing
 }
 ```
 
@@ -32,8 +33,8 @@ type Boop struct {
 
 ```golang
 err := meep.New(
-	&Woop{Wonk:"Bonk"},
-	meep.Cause(&Boop{}),
+	&ErrMyApplicationStuck{Subsystem:"blamethis", TaskNum: 42},
+	meep.Cause(&ErrNoSpoons{}),
 )
 ```
 
@@ -52,8 +53,11 @@ if you decide your type needs that!
 Typed errors are pretty much universally acknowledged to beat the pants off `fmt.Errorf("unmangably handwavey")` stringy errors.
 **Now start using them**, because it's *easy*, and you can have stacks and all these other bonuses too!
 
+read more
+---------
 
-Availability
-------------
-
-`meep` works with any recent version of Go, going as far back as go1.2.
+- [A bigger example](READMORE.md#a-bigger-example)
+- [Capturing and displaying multiple stacks](READMORE.md#capturing-and-displaying-multiple-stacks)
+- ["try"-like handling and dispatch blocks](READMORE.md#try-like-handling-and-dispatch-blocks)
+- [Availablity](READMORE.md#availability)
+- [Performance](READMORE.md#performance)
