@@ -1,4 +1,4 @@
-More Expressive Error Patterns
+More Expressive Error Patterns [![](https://godoc.org/github.com/polydawn/meep?status.svg)](http://godoc.org/github.com/polydawn/meep) [![Build Status](https://travis-ci.org/polydawn/meep.svg?branch=master)](https://travis-ci.org/polydawn/meep)
 ------------------------------
 
 consider the following!
