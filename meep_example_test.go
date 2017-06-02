@@ -52,7 +52,14 @@ func ExampleSigh() {
 		if err := json.Unmarshal(msgRaw, msg); err != nil {
 			return msgEnvelope, meep.New(
 				&ErrMalformedMessage{ExpectedType: msgEnvelope.MsgType},
-				meep.Cause(err),
+				meep.Cause(fmt.Errorf("json: cannot unmarshal")),
+				// ...sorry, this is not a great example.
+				// We used to have this take the actually 'err' returned
+				// and pass that on as cause, which makes much more sense.
+				// However, the strings returned by stdlib's json.Unmarshal
+				// function have changed across go versions, which caused
+				// this test to fail on some go versions, so we had to
+				// flatten it.  Versioning!  It's important.
 			)
 		}
 		msgEnvelope.Msg = msg
@@ -64,6 +71,6 @@ func ExampleSigh() {
 	// Output:
 	//
 	// Error[meep_test.ErrMalformedMessage]: ExpectedType="apple";
-	// 	Caused by: json: cannot unmarshal string into Go value of type int
+	// 	Caused by: json: cannot unmarshal
 	//
 }
