@@ -4,7 +4,9 @@ go:
   - 1.4
   - 1.5
   - 1.6
-  - tip
+  - 1.7
+  - 1.8
+  # doing 'tip' is not a great idea; it has previously caused things to suddenly become "broken" based on calendar date, and i don't appreciate it.
 
 install: true # don't `go get`, please.
 
